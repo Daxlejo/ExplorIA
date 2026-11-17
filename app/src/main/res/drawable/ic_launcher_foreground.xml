@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pin de ubicación teal con insignia de bombillo ámbar. Zona segura: 66 x 66 centrada. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="2.3"
+        android:scaleY="2.3"
+        android:translateX="22"
+        android:translateY="27">
+        <path
+            android:fillColor="#5DCAA5"
+            android:pathData="M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM12,11.5c-1.38,0 -2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5 -1.12,2.5 -2.5,2.5z" />
+    </group>
+    <path
+        android:fillColor="#0B2A21"
+        android:pathData="M70,39m-15.5,0a15.5,15.5 0,1 1,31 0a15.5,15.5 0,1 1,-31 0" />
+    <path
+        android:fillColor="#FAC775"
+        android:pathData="M70,39m-13,0a13,13 0,1 1,26 0a13,13 0,1 1,-26 0" />
+    <group
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:translateX="60.4"
+        android:translateY="29.4">
+        <path
+            android:fillColor="#3A2A05"
+            android:pathData="M9,21c0,0.55 0.45,1 1,1h4c0.55,0 1,-0.45 1,-1v-1L9,20v1zM12,2C8.14,2 5,5.14 5,9c0,2.38 1.19,4.47 3,5.74L8,17c0,0.55 0.45,1 1,1h6c0.55,0 1,-0.45 1,-1v-2.26c1.81,-1.27 3,-3.36 3,-5.74 0,-3.86 -3.14,-7 -7,-7z" />
+    </group>
+</vector>

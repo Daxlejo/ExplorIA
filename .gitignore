@@ -1,0 +1,23 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Secretos y configuración local
+local.properties
+
+# IDE
+.idea/
+*.iml
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Firmas
+*.jks
+*.keystore

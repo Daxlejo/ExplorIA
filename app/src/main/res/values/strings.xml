@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+    <string name="app_nombre">Datos Cerca</string>
+
+    <!-- Tipos de dato -->
+    <string name="tipo_interesante">Interesante</string>
+    <string name="tipo_historico">Histórico</string>
+    <string name="tipo_comico">Cómico</string>
+    <string name="tipo_curioso">Curioso</string>
+    <string name="tipo_gastronomico">Gastronómico</string>
+
+    <!-- Intensidad -->
+    <string name="intensidad_suave">Suave</string>
+    <string name="intensidad_normal">Normal</string>
+    <string name="intensidad_intenso">Intenso</string>
+    <string name="intensidad_suave_descripcion">Un dato cada 10 min, una frase</string>
+    <string name="intensidad_normal_descripcion">En cada lugar nuevo, dos frases</string>
+    <string name="intensidad_intenso_descripcion">Todos los lugares, un párrafo</string>
+    <string name="intensidad_descripcion_accesible">Intensidad %1$s</string>
+
+    <!-- Acciones -->
+    <string name="accion_dato_ahora">Dato ahora</string>
+    <string name="accion_otro_dato">Otro dato</string>
+    <string name="accion_reintentar">Reintentar</string>
+    <string name="accion_reanudar">Reanudar</string>
+    <string name="accion_escuchar">Escuchar el dato</string>
+    <string name="accion_marcar_favorito">Marcar como favorito</string>
+    <string name="accion_quitar_favorito">Quitar de favoritos</string>
+    <string name="accion_borrar">Borrar el dato</string>
+    <string name="accion_abrir_historial">Abrir el historial</string>
+    <string name="accion_abrir_configuracion">Abrir la configuración</string>
+    <string name="accion_volver">Volver</string>
+    <string name="accion_volver_al_dato">Volver al dato</string>
+
+    <!-- Inicio -->
+    <string name="inicio_iniciando_titulo">Ubicándote</string>
+    <string name="inicio_iniciando_mensaje">Buscando tu posición…</string>
+    <string name="inicio_explorando_titulo">Explorando</string>
+    <string name="inicio_cerca_de">Cerca de %1$s</string>
+    <string name="inicio_sin_lugar_cerca">Te aviso al llegar.</string>
+    <string name="inicio_buscando_titulo">Buscando un dato</string>
+    <string name="inicio_buscando_mensaje">Mirando alrededor…</string>
+    <string name="inicio_aviso_automatico">Último intento: %1$s</string>
+
+    <!-- Dato -->
+    <string name="dato_distancia">A %1$d m</string>
+    <string name="dato_no_disponible_titulo">Este dato ya no está</string>
+    <string name="dato_no_disponible_mensaje">Fue borrado del historial.</string>
+    <string name="dato_cargando">Abriendo el dato…</string>
+    <string name="dato_borrar_titulo">¿Borrar este dato?</string>
+    <string name="dato_borrar_mensaje">Saldrá del historial y no se puede recuperar.</string>
+    <string name="dato_buscando_otro">Buscando…</string>
+
+    <!-- Configuración -->
+    <string name="configuracion_titulo">Configuración</string>
+    <string name="configuracion_tipos">Tipos de dato</string>
+    <string name="configuracion_minimo_un_tipo">Deja al menos un tipo marcado.</string>
+    <string name="configuracion_aleatorio">Aleatorio</string>
+    <string name="configuracion_aleatorio_descripcion">Elige al azar entre los marcados</string>
+    <string name="configuracion_intensidad">Intensidad</string>
+    <string name="configuracion_avisos">Avisos</string>
+    <string name="configuracion_voz">Leer en voz alta</string>
+    <string name="configuracion_vibracion">Vibrar con cada dato</string>
+    <string name="configuracion_pausa">Pausar datos</string>
+    <string name="configuracion_pausa_descripcion">No llega ningún dato nuevo</string>
+    <string name="configuracion_cargando">Cargando tus preferencias…</string>
+    <string name="configuracion_voz_no_disponible">El reloj no tiene voz en español instalada.</string>
+    <string name="configuracion_error_guardado">No se pudo guardar el cambio. Intenta de nuevo.</string>
+
+    <!-- Historial -->
+    <string name="historial_titulo">Historial</string>
+    <string name="historial_solo_favoritos">Solo favoritos</string>
+    <string name="historial_hoy">Hoy</string>
+    <string name="historial_ayer">Ayer</string>
+    <string name="historial_cargando">Cargando el historial…</string>
+    <string name="historial_vacio_titulo">Aún no hay datos</string>
+    <string name="historial_vacio_mensaje">Pide un dato desde el inicio y quedará guardado aquí.</string>
+    <string name="historial_sin_favoritos_titulo">Sin favoritos</string>
+    <string name="historial_sin_favoritos_mensaje">Toca la estrella de un dato para guardarlo aquí.</string>
+    <string name="historial_favorito_descripcion">Favorito</string>
+
+    <!-- Pausa y errores -->
+    <string name="pausa_titulo">En pausa</string>
+    <string name="pausa_mensaje">No llegan datos nuevos.</string>
+    <string name="error_permiso_titulo">Sin permiso de ubicación</string>
+    <string name="error_permiso_mensaje">Permite la ubicación para saber qué tienes cerca.</string>
+    <string name="error_gps_titulo">Sin señal de GPS</string>
+    <string name="error_gps_mensaje">Activa la ubicación del reloj o sal a cielo abierto.</string>
+    <string name="error_internet_titulo">Sin internet</string>
+    <string name="error_internet_mensaje">Revisa la conexión del reloj y vuelve a intentar.</string>
+    <string name="error_lugares_titulo">Nada cerca todavía</string>
+    <string name="error_lugares_mensaje">No hay lugares conocidos por aquí. Camina un poco.</string>
+    <string name="error_fuente_titulo">Lugares no disponibles</string>
+    <string name="error_fuente_mensaje">No se pudo consultar qué hay cerca. Intenta de nuevo.</string>
+    <string name="error_ia_titulo">No se pudo crear el dato</string>
+    <string name="error_ia_mensaje">La IA no respondió. Intenta de nuevo en un momento.</string>
+    <string name="error_guardado_titulo">No se pudo guardar</string>
+    <string name="error_guardado_mensaje">El reloj no pudo guardar el cambio. Intenta de nuevo.</string>
+    <string name="error_voz_titulo">Voz no disponible</string>
+    <string name="error_voz_mensaje">Instala una voz en español en los ajustes del reloj.</string>
+</resources>
