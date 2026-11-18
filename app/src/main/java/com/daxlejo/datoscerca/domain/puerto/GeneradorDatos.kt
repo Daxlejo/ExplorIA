@@ -12,9 +12,14 @@ data class SolicitudGeneracion(
     val tipo: TipoDato,
     val intensidad: Intensidad,
     val prompt: Prompt,
+    val textosExcluidos: List<String> = emptyList(),
 ) {
     /** Clave estable para cachear: no depende de la distancia ni del contexto del momento. */
     val claveCache: String get() = "${lugar.id}|${tipo.name}|${intensidad.name}"
+
+    companion object {
+        const val MAX_VARIANTES_POR_CLAVE = 3
+    }
 }
 
 interface GeneradorDatos {

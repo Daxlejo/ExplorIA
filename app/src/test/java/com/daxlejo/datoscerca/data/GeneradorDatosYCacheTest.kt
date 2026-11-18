@@ -30,11 +30,12 @@ class GeneradorDatosYCacheTest {
         idLugar: String = "wikipedia-es:9855193",
         tipo: TipoDato = TipoDato.HISTORICO,
         intensidad: Intensidad = Intensidad.NORMAL,
+        excluidos: List<String> = emptyList(),
     ): SolicitudGeneracion {
         val sitio = lugar(id = idLugar, nombre = "Plaza de Nariño", contexto = "Plaza central de Pasto.")
         val formato = FormatoDato("exactamente dos frases", maxTokensSalida = 110)
-        val prompt = PromptBuilder().lugar(sitio).tipo(tipo).formato(formato).build()
-        return SolicitudGeneracion(sitio, tipo, intensidad, prompt)
+        val prompt = PromptBuilder().lugar(sitio).tipo(tipo).formato(formato).evitar(excluidos).build()
+        return SolicitudGeneracion(sitio, tipo, intensidad, prompt, textosExcluidos = excluidos)
     }
 
     @Test
@@ -253,5 +254,59 @@ class GeneradorDatosYCacheTest {
         assertTrue(GuardiaSalidaIa.contieneMetacomentarios("El contexto no indica fechas."))
         assertTrue(GuardiaSalidaIa.contieneMetacomentarios("No aparece registrado."))
         assertFalse(GuardiaSalidaIa.contieneMetacomentarios("Fue fundada en 1537 por Sebastián de Belalcázar."))
+    }
+
+    @Test
+    fun `permite hasta 3 variantes por clave sirve las no mostradas y no supera 3 llamadas a la IA`() = runTest {
+        var contador = 0
+        val delegado = object : com.daxlejo.datoscerca.domain.puerto.GeneradorDatos {
+            var llamadas = 0
+            override suspend fun generar(solicitud: SolicitudGeneracion): Resultado<String> {
+                llamadas++
+                contador++
+                return Resultado.Exito("Variante histórica número $contador.")
+            }
+        }
+        val cache = CacheDatos()
+        val generador = GeneradorDatosConCache(delegado, cache)
+
+        val v1 = generador.generar(solicitud(excluidos = emptyList())).valorExitoso()
+        val v2 = generador.generar(solicitud(excluidos = listOf(v1))).valorExitoso()
+        val v3 = generador.generar(solicitud(excluidos = listOf(v2, v1))).valorExitoso()
+        // Al tener ya 3 variantes en caché, una cuarta petición no llama a OpenAI y rota a la menos reciente (v1).
+        val v4 = generador.generar(solicitud(excluidos = listOf(v3, v2, v1))).valorExitoso()
+        // Si solo se excluye v1, sirve v2 desde caché sin llamar a la IA.
+        val desdeCache = generador.generar(solicitud(excluidos = listOf(v1))).valorExitoso()
+
+        assertEquals("Variante histórica número 1.", v1)
+        assertEquals("Variante histórica número 2.", v2)
+        assertEquals("Variante histórica número 3.", v3)
+        assertEquals(v1, v4)
+        assertEquals(v2, desdeCache)
+        assertEquals(3, delegado.llamadas)
+        assertEquals(3, cache.obtenerVariantes(solicitud().claveCache).size)
+    }
+
+    @Test
+    fun `cache datos lee el formato antiguo de un solo string por clave de forma retrocompatible`() = runTest {
+        val archivo = Files.createTempFile("cache-formato-antiguo", ".json").toFile().apply { deleteOnExit() }
+        archivo.writeText(
+            """
+            {
+              "wikipedia-es:9855193|HISTORICO|NORMAL": "La Plaza de Nariño fue la Plaza Mayor colonial."
+            }
+            """.trimIndent(),
+        )
+
+        val cache = CacheDatos(archivo)
+
+        assertEquals(
+            "La Plaza de Nariño fue la Plaza Mayor colonial.",
+            cache.obtener("wikipedia-es:9855193|HISTORICO|NORMAL"),
+        )
+        assertEquals(
+            listOf("La Plaza de Nariño fue la Plaza Mayor colonial."),
+            cache.obtenerVariantes("wikipedia-es:9855193|HISTORICO|NORMAL"),
+        )
     }
 }

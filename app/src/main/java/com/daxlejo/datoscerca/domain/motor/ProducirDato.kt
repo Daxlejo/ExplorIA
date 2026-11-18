@@ -49,21 +49,73 @@ class ProducirDato(
         recientes: List<EntradaHistorial>,
         origen: OrigenDato,
     ): Resultado<EntradaHistorial> {
-        val tipo = elegirTipo(configuracion, recientes)
-        val solicitud = solicitud(lugar, tipo, configuracion)
+        val tipo = elegirTipoConVariedad(lugar, configuracion, recientes)
+        val previos = textosRecientesDeClave(lugar.id, tipo, configuracion, recientes)
+        val solicitud = solicitud(lugar, tipo, configuracion, previos)
         return generador.generar(solicitud)
             .encadenar { texto -> guardar(texto, solicitud, origen) }
             .also { if (it is Resultado.Exito) avisador.avisar(it.valor, configuracion) }
     }
 
-    private fun elegirTipo(configuracion: Configuracion, recientes: List<EntradaHistorial>): TipoDato =
-        fabricaSelectores.para(configuracion)
+    private fun elegirTipoConVariedad(
+        lugar: Lugar,
+        configuracion: Configuracion,
+        recientes: List<EntradaHistorial>,
+    ): TipoDato {
+        val preferido = fabricaSelectores.para(configuracion)
             .seleccionar(configuracion.tipos, recientes.firstOrNull()?.dato?.tipo)
+        val vistosPreferido = textosRecientesDeClave(lugar.id, preferido, configuracion, recientes)
+        if (vistosPreferido.size < SolicitudGeneracion.MAX_VARIANTES_POR_CLAVE || configuracion.tipos.size <= 1) {
+            return preferido
+        }
+        val ordenados = configuracion.tipos.sorted()
+        val indiceInicial = ordenados.indexOf(preferido).coerceAtLeast(0)
+        val rotados = (1 until ordenados.size).map { desplazamiento ->
+            ordenados[(indiceInicial + desplazamiento) % ordenados.size]
+        }
+        return rotados.firstOrNull { candidato ->
+            textosRecientesDeClave(lugar.id, candidato, configuracion, recientes).size <
+                SolicitudGeneracion.MAX_VARIANTES_POR_CLAVE
+        } ?: rotados.first()
+    }
 
-    private fun solicitud(lugar: Lugar, tipo: TipoDato, configuracion: Configuracion): SolicitudGeneracion {
+    private fun textosRecientesDeClave(
+        idLugar: String,
+        tipo: TipoDato,
+        configuracion: Configuracion,
+        recientes: List<EntradaHistorial>,
+    ): List<String> = recientes
+        .asSequence()
+        .filter {
+            it.dato.lugar.id == idLugar &&
+                it.dato.tipo == tipo &&
+                it.dato.intensidad == configuracion.intensidad
+        }
+        .map { it.dato.texto.trim() }
+        .filter { it.isNotEmpty() }
+        .distinct()
+        .toList()
+
+    private fun solicitud(
+        lugar: Lugar,
+        tipo: TipoDato,
+        configuracion: Configuracion,
+        previos: List<String>,
+    ): SolicitudGeneracion {
         val formato = fabricaPoliticas.para(configuracion.intensidad).formato
-        val prompt = PromptBuilder().lugar(lugar).tipo(tipo).formato(formato).build()
-        return SolicitudGeneracion(lugar, tipo, configuracion.intensidad, prompt)
+        val prompt = PromptBuilder()
+            .lugar(lugar)
+            .tipo(tipo)
+            .formato(formato)
+            .evitar(previos)
+            .build()
+        return SolicitudGeneracion(
+            lugar = lugar,
+            tipo = tipo,
+            intensidad = configuracion.intensidad,
+            prompt = prompt,
+            textosExcluidos = previos,
+        )
     }
 
     private suspend fun guardar(

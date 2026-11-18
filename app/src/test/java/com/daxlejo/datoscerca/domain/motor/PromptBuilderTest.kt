@@ -75,6 +75,20 @@ class PromptBuilderTest {
     }
 
     @Test
+    fun `incluye los textos previos como instruccion de no repetir cuando se indican`() {
+        val prompt = PromptBuilder()
+            .lugar(catedral)
+            .tipo(TipoDato.HISTORICO)
+            .formato(formato)
+            .evitar(listOf("Primer dato histórico.", "Segundo dato histórico."))
+            .build()
+
+        assertTrue(prompt.usuario.contains("No repitas estos datos"))
+        assertTrue(prompt.usuario.contains("Primer dato histórico."))
+        assertTrue(prompt.usuario.contains("Segundo dato histórico."))
+    }
+
+    @Test
     fun `falla si falta alguna parte`() {
         assertThrows(IllegalStateException::class.java) { PromptBuilder().tipo(TipoDato.CURIOSO).formato(formato).build() }
         assertThrows(IllegalStateException::class.java) { PromptBuilder().lugar(catedral).formato(formato).build() }

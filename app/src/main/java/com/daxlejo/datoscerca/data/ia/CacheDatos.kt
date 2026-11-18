@@ -12,28 +12,54 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Caché de datos generados por clave (`lugar.id|tipo|intensidad`).
+ * Caché de datos generados por clave (`lugar.id|tipo|intensidad`), con hasta [MAX_VARIANTES]
+ * variantes distintas por clave.
+ *
  * Mantiene las entradas en memoria y, si se le entrega un [archivoPersistencia], las sincroniza
- * en disco para conservarlas al cerrar la app y ahorrar llamadas a OpenAI.
+ * en disco. Es retrocompatible al leer el formato antiguo de un solo string por clave (`Map<String, String>`)
+ * para que la precarga del modo demo y los archivos previos sigan funcionando.
  */
 class CacheDatos(
     private val archivoPersistencia: File? = null,
     private val json: Json = FuenteWikipedia.jsonPorDefecto,
 ) {
-    private val entradas = ConcurrentHashMap<String, String>()
+    private val entradas = ConcurrentHashMap<String, List<String>>()
 
     init {
         cargarDesdeArchivo()
     }
 
-    fun obtener(clave: String): String? = entradas[clave]
+    /** Devuelve la primera variante disponible para la clave (retrocompatible). */
+    fun obtener(clave: String): String? = entradas[clave]?.firstOrNull()
+
+    /** Devuelve todas las variantes almacenadas para la clave (máximo [MAX_VARIANTES]). */
+    fun obtenerVariantes(clave: String): List<String> = entradas[clave].orEmpty()
+
+    /** Devuelve la primera variante en caché que no esté en [excluidos]. */
+    fun obtenerVarianteNoMostrada(clave: String, excluidos: Collection<String>): String? {
+        val variantes = entradas[clave] ?: return null
+        if (excluidos.isEmpty()) return variantes.firstOrNull()
+        val conjuntoExcluidos = excluidos.map(String::trim).toSet()
+        return variantes.firstOrNull { it !in conjuntoExcluidos }
+    }
 
     fun guardar(clave: String, texto: String) {
         val limpio = texto.trim()
         if (limpio.isEmpty() || GuardiaSalidaIa.contieneMetacomentarios(limpio)) return
-        entradas[clave] = limpio
+        entradas.compute(clave) { _, actuales ->
+            val base = actuales.orEmpty()
+            if (limpio in base || base.size >= MAX_VARIANTES) {
+                base
+            } else {
+                base + limpio
+            }
+        }
         persistirEnArchivo()
     }
 
@@ -41,7 +67,10 @@ class CacheDatos(
         lote.forEach { (clave, texto) ->
             val limpio = texto.trim()
             if (limpio.isNotEmpty() && !GuardiaSalidaIa.contieneMetacomentarios(limpio)) {
-                entradas[clave] = limpio
+                val previas = entradas[clave].orEmpty()
+                if (limpio !in previas && previas.size < MAX_VARIANTES) {
+                    entradas[clave] = previas + limpio
+                }
             }
         }
         persistirEnArchivo()
@@ -54,13 +83,35 @@ class CacheDatos(
         try {
             val texto = archivo.readText()
             if (texto.isBlank()) return
-            val mapa = json.decodeFromString<Map<String, String>>(texto)
-            entradas.putAll(mapa)
+            val raiz = json.parseToJsonElement(texto) as? JsonObject ?: return
+            for ((clave, elemento) in raiz) {
+                val variantes = extraerVariantesJson(elemento)
+                if (variantes.isNotEmpty()) {
+                    entradas[clave] = variantes
+                }
+            }
         } catch (e: IOException) {
             Log.w(ETIQUETA, "No se pudo leer el archivo de caché", e)
         } catch (e: SerializationException) {
             Log.w(ETIQUETA, "Caché en disco corrupta; se ignora", e)
+        } catch (e: IllegalArgumentException) {
+            Log.w(ETIQUETA, "Formato JSON inesperado en caché; se ignora", e)
         }
+    }
+
+    private fun extraerVariantesJson(elemento: JsonElement): List<String> {
+        val brutas = when (elemento) {
+            is JsonPrimitive -> if (elemento.isString) listOf(elemento.content) else emptyList()
+            is JsonArray -> elemento.mapNotNull { item ->
+                (item as? JsonPrimitive)?.takeIf(JsonPrimitive::isString)?.content
+            }
+            else -> emptyList()
+        }
+        return brutas
+            .map(String::trim)
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .take(MAX_VARIANTES)
     }
 
     private fun persistirEnArchivo() {
@@ -73,15 +124,16 @@ class CacheDatos(
         }
     }
 
-    private companion object {
-        const val ETIQUETA = "CacheDatos"
+    companion object {
+        private const val ETIQUETA = "CacheDatos"
+        const val MAX_VARIANTES = SolicitudGeneracion.MAX_VARIANTES_POR_CLAVE
     }
 }
 
 /**
- * Decorator sobre [GeneradorDatos]: devuelve el dato desde [CacheDatos] si ya existe para la
- * combinación `lugar + tipo + intensidad`, sin invocar a OpenAI. Si no existe, delega en el
- * generador real y almacena el resultado exitoso.
+ * Decorator sobre [GeneradorDatos]: sirve una variante desde [CacheDatos] que no se haya mostrado
+ * recientemente. Solo invoca a OpenAI cuando todas las variantes en caché ya se mostraron y aún
+ * hay cupo (< [CacheDatos.MAX_VARIANTES] variantes por clave).
  */
 class GeneradorDatosConCache(
     private val delegado: GeneradorDatos,
@@ -90,9 +142,18 @@ class GeneradorDatosConCache(
 
     override suspend fun generar(solicitud: SolicitudGeneracion): Resultado<String> {
         val clave = solicitud.claveCache
-        cache.obtener(clave)?.let { enCache ->
-            return Resultado.Exito(enCache)
+        val excluidos = solicitud.textosExcluidos.map(String::trim).filter(String::isNotEmpty)
+
+        cache.obtenerVarianteNoMostrada(clave, excluidos)?.let { noMostrada ->
+            return Resultado.Exito(noMostrada)
         }
+
+        val variantesActuales = cache.obtenerVariantes(clave)
+        if (variantesActuales.size >= CacheDatos.MAX_VARIANTES) {
+            val menosReciente = elegirMenosReciente(variantesActuales, excluidos)
+            return Resultado.Exito(menosReciente)
+        }
+
         return when (val resultado = delegado.generar(solicitud)) {
             is Resultado.Exito -> {
                 val limpio = resultado.valor.trim()
@@ -105,4 +166,8 @@ class GeneradorDatosConCache(
             is Resultado.Fallo -> resultado
         }
     }
+
+    // `excluidos` viene ordenado del más reciente (índice 0) al más antiguo: se elige el de mayor índice.
+    private fun elegirMenosReciente(variantes: List<String>, excluidos: List<String>): String =
+        variantes.maxByOrNull { excluidos.indexOf(it) } ?: variantes.first()
 }

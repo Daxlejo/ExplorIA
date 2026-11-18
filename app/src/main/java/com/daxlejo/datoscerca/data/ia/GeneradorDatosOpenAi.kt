@@ -94,6 +94,7 @@ class GeneradorDatosOpenAi(
             .lugar(solicitud.lugar)
             .tipo(TipoDato.INTERESANTE)
             .formato(formato)
+            .evitar(solicitud.textosExcluidos)
             .build()
     }
 

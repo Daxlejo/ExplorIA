@@ -10,24 +10,36 @@ class PromptBuilder {
     private var lugar: Lugar? = null
     private var tipo: TipoDato? = null
     private var formato: FormatoDato? = null
+    private var previos: List<String> = emptyList()
 
     fun lugar(lugar: Lugar) = apply { this.lugar = lugar }
     fun tipo(tipo: TipoDato) = apply { this.tipo = tipo }
     fun formato(formato: FormatoDato) = apply { this.formato = formato }
+    fun evitar(previos: List<String>) = apply { this.previos = previos }
 
     fun build(): Prompt {
         val lugar = checkNotNull(lugar) { "Falta el lugar" }
         val tipo = checkNotNull(tipo) { "Falta el tipo de dato" }
         val formato = checkNotNull(formato) { "Falta el formato" }
-        return Prompt(SISTEMA, mensajeUsuario(lugar, tipo, formato), formato.maxTokensSalida)
+        return Prompt(SISTEMA, mensajeUsuario(lugar, tipo, formato, previos), formato.maxTokensSalida)
     }
 
-    private fun mensajeUsuario(lugar: Lugar, tipo: TipoDato, formato: FormatoDato): String = buildString {
+    private fun mensajeUsuario(
+        lugar: Lugar,
+        tipo: TipoDato,
+        formato: FormatoDato,
+        previos: List<String>,
+    ): String = buildString {
         appendLine("Lugar: ${lugar.nombre}")
         appendLine("Enfoque: ${enfoque(tipo)}")
         appendLine("Largo: ${formato.instruccionLargo}")
+        val aEvitar = previos.map(String::trim).filter(String::isNotEmpty).distinct().take(MAX_PREVIOS_EN_PROMPT)
+        if (aEvitar.isNotEmpty()) {
+            val resumenPrevios = aEvitar.joinToString(" | ") { recortar(it, MAX_CHARS_POR_PREVIO) }
+            appendLine("No repitas estos datos (cuenta otro hecho distinto): $resumenPrevios")
+        }
         appendLine("CONTEXTO:")
-        append(recortar(lugar.contexto))
+        append(recortar(lugar.contexto, MAX_CONTEXTO_CHARS))
     }
 
     private fun enfoque(tipo: TipoDato): String = when (tipo) {
@@ -39,16 +51,18 @@ class PromptBuilder {
     }
 
     // Recorta en el último espacio para no partir palabras y ahorrar tokens.
-    private fun recortar(contexto: String): String {
+    private fun recortar(contexto: String, maxChars: Int): String {
         val limpio = contexto.trim()
-        if (limpio.length <= MAX_CONTEXTO_CHARS) return limpio
-        val corte = limpio.take(MAX_CONTEXTO_CHARS)
+        if (limpio.length <= maxChars) return limpio
+        val corte = limpio.take(maxChars)
         val ultimoEspacio = corte.lastIndexOf(' ')
         return if (ultimoEspacio > 0) corte.take(ultimoEspacio) else corte
     }
 
     companion object {
         const val MAX_CONTEXTO_CHARS = 1200
+        private const val MAX_PREVIOS_EN_PROMPT = 2
+        private const val MAX_CHARS_POR_PREVIO = 180
 
         const val SISTEMA =
             "Eres un guía local para un caminante. " +

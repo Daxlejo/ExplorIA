@@ -315,6 +315,49 @@ class ObtenerDatoAhoraTest {
     }
 
     @Test
+    fun `al repetir el mismo lugar y tipo pasa los textos previos en el prompt y rota a otro tipo tras 3 variantes`() = runTest {
+        val tipos = setOf(TipoDato.HISTORICO, TipoDato.CURIOSO)
+        // Con aleatorio fijo que siempre prefiere el primero (HISTORICO) mientras queden variantes.
+        val banco = Banco(
+            lugares = listOf(plaza),
+            configuracionInicial = Configuracion.PorDefecto.copy(
+                tipos = setOf(TipoDato.HISTORICO),
+                aleatorio = false,
+            ),
+        )
+
+        banco.generador.respuesta = Resultado.Exito("Hecho histórico 1.")
+        val primero = banco.obtenerDatoAhora().valorExitoso()
+        banco.generador.respuesta = Resultado.Exito("Hecho histórico 2.")
+        val segundo = banco.obtenerDatoAhora().valorExitoso()
+        banco.generador.respuesta = Resultado.Exito("Hecho histórico 3.")
+        val tercero = banco.obtenerDatoAhora().valorExitoso()
+
+        assertEquals(
+            listOf("Hecho histórico 1.", "Hecho histórico 2.", "Hecho histórico 3."),
+            listOf(primero.dato.texto, segundo.dato.texto, tercero.dato.texto),
+        )
+        assertTrue(banco.generador.solicitudes[1].prompt.usuario.contains("No repitas estos datos"))
+        assertTrue(banco.generador.solicitudes[1].prompt.usuario.contains("Hecho histórico 1."))
+        assertTrue(banco.generador.solicitudes[2].prompt.usuario.contains("Hecho histórico 2."))
+
+        // Al habilitar también CURIOSO y con el último dato siendo CURIOSO (para que SelectorEnOrden elija HISTORICO),
+        // como HISTORICO ya mostró sus 3 variantes en este lugar, ProducirDato rota a CURIOSO.
+        banco.configuracion.actualizar { it.copy(tipos = tipos) }
+        banco.historial.guardar(
+            com.daxlejo.datoscerca.soporte.dato(
+                lugar = iglesia,
+                tipo = TipoDato.CURIOSO,
+            ),
+        )
+        banco.generador.respuesta = Resultado.Exito("Detalle curioso nuevo.")
+        val cuarto = banco.obtenerDatoAhora().valorExitoso()
+
+        assertEquals(TipoDato.CURIOSO, cuarto.dato.tipo)
+        assertEquals("Detalle curioso nuevo.", cuarto.dato.texto)
+    }
+
+    @Test
     fun `con varios tipos marcados los recorre en orden`() = runTest {
         val tipos = setOf(TipoDato.INTERESANTE, TipoDato.COMICO)
         val banco = Banco(listOf(plaza), Configuracion.PorDefecto.copy(tipos = tipos))
