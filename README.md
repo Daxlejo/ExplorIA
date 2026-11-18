@@ -249,7 +249,7 @@ Al activarlo en **Configuración** se precargan en la caché los 8 sitios de la 
 5. **Calle sin hitos (3:30).** `teletransporte calle`: no sale nada automático, pero **Dato ahora** responde con un dato del municipio.
 6. **Historial (4:15).** Abrir el historial, marcar un favorito y filtrar *Solo favoritos*.
 
-La guía de preparación y el texto completo para hablar están en [`docs/`](docs/).
+La guía de preparación, el texto completo para hablar y las preguntas probables están en [`docs/`](docs/README.md).
 
 ---
 
