@@ -132,3 +132,31 @@ Gracias a esta separación, en la primera fase la app funcionó con datos simula
 
 ---
 
+## 6. Cómo se genera un dato
+
+1. `ProveedorUbicacionFused` emite la coordenada actual como `Flow`.
+2. `MotorAutomatico` observa la ubicación, respeta la pausa y la política de intensidad y pide lugares cercanos.
+3. `CadenaFuentesLugares` consulta las fuentes en orden y devuelve candidatos con su contexto (el resumen del artículo).
+4. `FiltroRelevancia` descarta lo que no es emblemático o está lejos; `FiltroRepeticion` descarta lo mostrado hace poco.
+5. `SelectorTipoDato` elige el tipo (fijo o aleatorio) y `PromptBuilder` arma el prompt.
+6. `GeneradorDatosConCache` busca en la caché por `lugar + tipo + intensidad`; solo si no existe llama a `GeneradorDatosOpenAi`.
+7. El dato se guarda en el historial (Room), el reloj vibra y la pantalla **Dato** se abre.
+
+Los errores (sin internet, tiempo agotado, fallo de la IA, sin lugares) se modelan con clases selladas (`ErrorDato`, `Resultado`) y cada uno tiene su pantalla diseñada; nunca se usa `!!` ni `catch` vacíos.
+
+---
+
+## 7. Design system
+
+Definido en `ui/theme` y reutilizado por todos los componentes:
+
+- **Paleta OLED:** fondo negro, primario teal `#1D9E75` / `#5DCAA5`, acento ámbar `#FAC775` (bombillo de descubrimiento y favoritos) y un color por tipo de dato con contraste WCAG AA.
+- **Tipografía:** el nombre del lugar en *serif* (como la placa de un monumento) y el cuerpo en *sans-serif*, centrado con margen lateral seguro para el borde curvo.
+- **Tokens:** espaciado, formas, duraciones y animaciones centralizados en `Tokens.kt`; área táctil mínima de 48 dp.
+- **Pantallas redondas:** `AppScaffold`, `ScreenScaffold`, `TransformingLazyColumn`, `EdgeButton` y `TimeText`.
+- **Componentes:** `ChipTipoDato`, `IndicadorIntensidad`, `TarjetaDato`, `FilaHistorial`, `BotonFavorito`, `PantallaEstado`, `PulsoExplorador`, `BombilloEncendido`.
+- **Verificado en:** reloj redondo grande, reloj pequeño (192 dp) y fuente grande (`1.24x`). Cada pantalla tiene `@Preview` para esos tres casos.
+- **Ícono:** adaptive icon con un pin de ubicación y un bombillo.
+
+---
+
