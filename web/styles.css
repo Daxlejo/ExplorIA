@@ -699,3 +699,116 @@ code {
   display: grid;
   gap: 8px;
 }
+
+/* ---------- Responsive ---------- */
+
+/* Móvil: la navegación se desplaza en horizontal debajo de la marca */
+@media (max-width: 759px) {
+  .cabecera__fila {
+    flex-wrap: wrap;
+    gap: 0;
+    padding-top: 10px;
+  }
+
+  .cabecera nav {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    padding: 6px 0 10px;
+  }
+
+  .nav a {
+    display: inline-block;
+    padding: 6px 0;
+  }
+
+  .hero__reloj {
+    order: -1;
+  }
+
+  .hero__fila {
+    text-align: left;
+  }
+}
+
+@media (min-width: 760px) {
+  .flujo {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .flujo__paso:not(:last-child)::after {
+    display: none;
+  }
+
+  .capas {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pie__fila {
+    grid-template-columns: 1.2fr 1.6fr 1fr;
+  }
+}
+
+@media (min-width: 960px) {
+  .hero__fila {
+    grid-template-columns: 1.15fr 1fr;
+  }
+
+  /* Siete pasos en una banda con flechas entre ellos */
+  .flujo {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 18px;
+  }
+
+  .flujo__paso {
+    padding: 52px 14px 16px;
+  }
+
+  .flujo__paso::before {
+    left: 14px;
+  }
+
+  .flujo__paso:not(:last-child)::after {
+    display: block;
+    left: auto;
+    right: -16px;
+    top: 30px;
+    bottom: auto;
+    width: 14px;
+    height: 2px;
+    transform: none;
+  }
+
+  .flujo__paso h3 {
+    font-size: 1rem;
+  }
+
+  .flujo__paso p {
+    font-size: 0.85rem;
+  }
+
+  /* domain al centro: ui arriba, data y di a los lados */
+  .capas {
+    grid-template-columns: 1fr 1.3fr 1fr;
+    grid-template-areas:
+      ".    ui     ."
+      "data domain di";
+    align-items: stretch;
+  }
+
+  .capa:nth-child(1) { grid-area: ui; }
+  .capa:nth-child(2) { grid-area: data; }
+  .capa:nth-child(3) { grid-area: domain; }
+  .capa:nth-child(4) { grid-area: di; }
+
+  .costos {
+    grid-template-columns: 1fr 1.4fr;
+    align-items: start;
+  }
+}
