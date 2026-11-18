@@ -266,3 +266,49 @@ El presupuesto era de 5 USD compartidos entre tres apps, así que el diseño aho
 
 ---
 
+## 13. Estructura del repositorio
+
+```text
+.
+├── app/                       Módulo Android (código, recursos y tests)
+├── auditorias/                Auditoría de cada sesión de desarrollo y capturas de pantalla
+├── demo/                      Ruta GPX y scripts de teletransporte (.bat y .sh)
+├── docs/                      Arquitectura, decisiones técnicas y guías de la exposición
+├── gradle/libs.versions.toml  Catálogo de versiones
+├── local.properties.example   Plantilla de configuración (sin secretos)
+├── PLAN_FASES.md              Plan de trabajo por sesiones
+└── README.md
+```
+
+---
+
+## 14. Dificultades y decisiones técnicas
+
+- **Presupuesto de IA.** Ver la sección 12: razonamiento desactivado, caché y topes por intensidad.
+- **Distinguir un hito de una calle cualquiera.** Nominatim devuelve direcciones de todo, incluso de casas. Se clasifica por etiquetas `tourism`/`historic` y por la existencia de un artículo en Wikipedia, y se probó con coordenadas reales de Pasto.
+- **Que la IA no invente.** Solo recibe el texto real del lugar y se le prohíbe agregar nombres, fechas o cifras.
+- **Pantalla redonda.** El texto rozaba el borde curvo: se centró, se agregó margen lateral proporcional y se verificó en reloj pequeño y con fuente grande.
+- **Respetar las políticas de uso.** Nominatim se consulta a máximo 1 petición por segundo y con `User-Agent` descriptivo.
+- **Permisos.** Se usa `ActivityCompat.requestPermissions` con sondeo reactivo del permiso, porque `registerForActivityResult` generaba un error de Lint con Play Services.
+- **Demo a prueba de fallos.** El Modo demo y la caché permiten presentar aunque falle la red.
+
+---
+
+## 15. Limitaciones conocidas
+
+- Solo funciona en primer plano (no hay servicio en segundo plano).
+- Las pruebas de integración se hicieron en el emulador con ubicación simulada, no en un reloj físico.
+- Los datos dependen de que el lugar tenga artículo en Wikipedia u etiquetas en OpenStreetMap.
+- Una primera consulta en frío tarda de 4 a 7 segundos (lugares + IA); luego queda en caché.
+- Los textos del Modo demo son fijos y no los genera la IA.
+- Idioma de los datos: solo español.
+
+---
+
+## 16. Fuentes de datos y créditos
+
+- Texto de lugares: **Wikipedia**, bajo licencia CC BY-SA.
+- Geocodificación y etiquetas: **© OpenStreetMap contributors** (ODbL), vía Nominatim.
+- Generación de texto: **OpenAI Responses API**.
+- **Autor:** David Cabezas ([@Daxlejo](https://github.com/Daxlejo)), estudiante de Ingeniería de Software, Universidad Cooperativa de Colombia, sede Pasto. Materia: Diseño de Software.
+- Desarrollado con apoyo de un asistente de IA para programar (Claude Code), en sesiones planificadas y con una auditoría escrita al final de cada una en [`auditorias/`](auditorias/).
