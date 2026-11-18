@@ -210,3 +210,59 @@ El dominio se prueba con dobles de prueba (`Dobles.kt`), sin emulador ni red.
 
 ---
 
+## 10. Demo: ruta GPX y teletransporte
+
+### Cargar la ruta `demo/ruta-pasto.gpx`
+
+1. En el emulador abre **`...` (Extended Controls) → Location → Routes**.
+2. **Import GPX/KML** y elige [`demo/ruta-pasto.gpx`](demo/ruta-pasto.gpx).
+3. Ajusta la velocidad (`2x` o `3x`) y pulsa **Play route**.
+
+La ruta pasa por 8 hitos del centro histórico de Pasto, con coordenadas verificadas en OpenStreetMap: *Museo Taminango → Teatro Imperial → Catedral de Pasto → Templo de San Juan Bautista → Plaza de Nariño → Templo de Cristo Rey → Museo del Oro Nariño → Plaza del Carnaval*. Arranca junto a una tienda de barrio para mostrar que la app no habla de lugares comunes.
+
+### Scripts de teletransporte
+
+`adb emu geo fix` recibe **primero la longitud y luego la latitud**. Los scripts [`demo/teletransporte.bat`](demo/teletransporte.bat) (Windows) y [`demo/teletransporte.sh`](demo/teletransporte.sh) (Linux/macOS/Git Bash) ya lo hacen bien y detectan el emulador activo:
+
+```powershell
+.\demo\teletransporte.bat pasto       # Plaza de Nariño
+.\demo\teletransporte.bat bogota      # Catedral Primada / Plaza de Bolívar
+.\demo\teletransporte.bat cartagena   # Torre del Reloj
+.\demo\teletransporte.bat paris       # Torre Eiffel
+.\demo\teletransporte.bat calle       # calle residencial sin hitos
+```
+
+En Bash el uso es igual: `./demo/teletransporte.sh pasto`.
+
+### Modo demo
+
+Al activarlo en **Configuración** se precargan en la caché los 8 sitios de la ruta (5 tipos × 3 intensidades) y se quita el tope por hora. Así la ruta de Pasto funciona **sin internet** y responde al instante. Los textos del Modo demo son fijos (escritos de antemano); los datos de cualquier otra ciudad se generan en vivo con la IA.
+
+---
+
+## 11. Guion de demostración de 5 minutos
+
+1. **Presentación (0:00).** Abrir ExplorIA, conceder el permiso y mostrar *Explorando*.
+2. **Ruta de Pasto (0:45).** Activar Modo demo y dar *Play* a `ruta-pasto.gpx`. En la tienda no sale nada; al acercarse al Museo Taminango, el Teatro Imperial, la Catedral o la Plaza de Nariño el reloj vibra y muestra el dato.
+3. **Cualquier lugar del mundo (2:00).** `teletransporte bogota`, `cartagena` y `paris`, pulsando **Dato ahora** en cada uno.
+4. **Tono e intensidad (3:00).** En Configuración elegir **Cómico** + **Intenso** y repetir en un mismo lugar para notar el cambio.
+5. **Calle sin hitos (3:30).** `teletransporte calle`: no sale nada automático, pero **Dato ahora** responde con un dato del municipio.
+6. **Historial (4:15).** Abrir el historial, marcar un favorito y filtrar *Solo favoritos*.
+
+La guía de preparación y el texto completo para hablar están en [`docs/`](docs/).
+
+---
+
+## 12. Control de costos de la IA
+
+El presupuesto era de 5 USD compartidos entre tres apps, así que el diseño ahorra tokens en cada paso:
+
+- **Caché por `lugar + tipo + intensidad`** (en memoria y en `cache_datos.json`): un dato ya generado no vuelve a pedirse.
+- **Sin razonamiento interno:** los modelos `gpt-5*`/`gpt-6*` se llaman con `reasoning.effort = "none"`; con el valor por defecto gastaban todos los tokens "pensando" y la respuesta salía vacía.
+- **Prompt corto** y contexto recortado a 1200 caracteres, cortando en frontera de palabra.
+- **Tope de tokens de salida** por intensidad (60 / 110 / 220) y `store = false`.
+- **La búsqueda web de OpenAI está apagada** por defecto (`OPENAI_WEB_SEARCH=false`).
+- **Anti-repetición:** no se vuelve a hablar de un lugar mostrado hace poco.
+
+---
+
