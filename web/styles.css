@@ -327,3 +327,33 @@ code {
   text-align: center;
   max-width: 34ch;
 }
+
+/* Tarjetas (qué hace) */
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 24px;
+}
+
+.tarjeta h3 {
+  color: var(--teal-claro);
+}
+
+.tarjeta p {
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+.tarjeta strong {
+  color: var(--texto);
+}
