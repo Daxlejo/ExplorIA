@@ -20,3 +20,9 @@ Registro breve de las decisiones de diseño más importantes: contexto, decisió
 - **Decisión:** `CadenaFuentesLugares` prueba en orden Wikipedia (es), Wikipedia (en), Nominatim, la búsqueda web de OpenAI (solo si está activada) y, al final, el municipio. El respaldo del municipio solo se usa con el botón manual **Dato ahora**.
 - **Consecuencias:** agregar o quitar una fuente no afecta a las demás. Nominatim se limita a 1 petición por segundo con `User-Agent` descriptivo, como exige su política de uso.
 
+## ADR-004 — Hablar solo de lugares emblemáticos
+
+- **Contexto:** OpenStreetMap devuelve direcciones, tiendas y casas; un dato sobre cada una sería ruido e interrumpiría a la persona.
+- **Decisión:** `FiltroRelevancia` solo deja pasar lugares con artículo en Wikipedia o etiquetas turísticas/históricas/patrimoniales, a 150–250 m. Se esperan 1–2 datos por hora según los sitios por los que se pase.
+- **Consecuencias:** una calle común nunca dispara un dato automático. Lugares sin artículo ni etiquetas no se detectan.
+
