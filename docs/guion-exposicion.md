@@ -50,3 +50,27 @@ Cuando salte un dato: «Vibra y muestra el tipo de dato, el lugar, la distancia 
 - **Tecnologías:** Fused Location, Wikipedia GeoSearch, OSM Nominatim (1 petición/segundo), OpenAI Responses API, OkHttp, kotlinx.serialization, Room, DataStore y TextToSpeech.
 - **Calidad:** 122 tests unitarios en verde y Lint sin errores; unas 6.000 líneas en 76 archivos Kotlin.
 
+## 8. Lo más difícil (elige 2 o 3)
+
+1. **El presupuesto de la IA.** Solo había 5 dólares para tres apps. El modelo gastaba los tokens «pensando» y el dato salía vacío; se resolvió desactivando el razonamiento, recortando el contexto, poniendo un tope por intensidad y, sobre todo, con una caché: un dato ya generado no se vuelve a pedir.
+2. **Distinguir un lugar emblemático de una calle.** OpenStreetMap devuelve direcciones de todo; se clasifica por etiquetas turísticas o históricas y por la existencia de un artículo en Wikipedia.
+3. **Que la IA no invente.** Solo recibe el texto real del lugar y se le prohíbe agregar nombres, fechas o cifras.
+4. **Diseñar para una pantalla redonda.** El texto tocaba el borde curvo; se centró, se dejaron márgenes proporcionales y se probó en reloj pequeño y con letra grande.
+5. **La demo sin internet.** El Modo demo deja precargada la ruta de Pasto.
+
+## 9. Cierre (15 s)
+
+«Una app de reloj que convierte una caminata en un recorrido guiado, en cualquier lugar del mundo, con IA que se basa en hechos reales y una arquitectura limpia con patrones de diseño. El código está en GitHub. ¿Preguntas?»
+
+## Preguntas probables
+
+| Pregunta | Respuesta corta |
+|---|---|
+| ¿Por qué el emulador y no un reloj? | No hay reloj físico; el emulador es el oficial de Google y simula GPS, así que la app es la misma. |
+| ¿Qué pasa sin internet? | El Modo demo y la caché siguen funcionando; sin caché se muestra un estado de error diseñado, no se cae. |
+| ¿Cómo evitan que la IA invente? | Solo recibe el contexto real de Wikipedia/OSM y la instrucción lo prohíbe. |
+| ¿Dónde está la API key? | En `local.properties` (no se sube a Git) y se inyecta por `BuildConfig`. |
+| ¿Por qué Clean Architecture? | Para separar responsabilidades: se cambiaron los datos simulados por los reales sin tocar la lógica, y el dominio se prueba sin Android. |
+| ¿Por qué Kotlin y Compose? | Son el lenguaje y el toolkit oficiales recomendados por Google para Android y Wear OS. |
+| ¿Cuánto cuesta un dato? | Una fracción de centavo (20–90 tokens de salida) y una sola vez por lugar, tipo e intensidad. |
+| ¿Los datos del Modo demo los genera la IA? | No: son textos fijos para funcionar sin internet; en otras ciudades se generan en vivo. |
