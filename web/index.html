@@ -287,6 +287,21 @@
         </ul>
       </div>
     </section>
+
+    <section class="seccion" id="probar" aria-labelledby="titulo-probar">
+      <div class="contenedor">
+        <p class="seccion__eyebrow">Probarlo</p>
+        <h2 id="titulo-probar">Cómo probarlo en el emulador</h2>
+        <ol class="pasos">
+          <li>Crea un emulador <strong>Wear OS Large Round</strong> (API 37) en Android Studio y ábrelo.</li>
+          <li>Descarga el APK desde la <a href="https://github.com/Daxlejo/ExplorIA/releases/latest">última versión publicada</a> o compílalo con <code>./gradlew assembleDebug</code>.</li>
+          <li>Instálalo con <code>adb install -r ExplorIA-1.0.0.apk</code> y abre ExplorIA.</li>
+          <li>Concede el permiso de ubicación y activa el <strong>Modo demo</strong> para recorrer la ruta de Pasto sin internet.</li>
+          <li>Usa los scripts de <code>demo/</code> para teletransportarte a Bogotá, Cartagena o París y pulsa <strong>Dato ahora</strong>.</li>
+        </ol>
+        <p class="nota">Para generar datos en vivo necesitas tu propia clave de OpenAI en <code>local.properties</code>. La guía completa (ruta GPX, teletransporte y guion de demo) está en el <a href="https://github.com/Daxlejo/ExplorIA#8-configuración-e-instalación">README del repositorio</a>.</p>
+      </div>
+    </section>
   </main>
 
   <footer class="pie" id="creditos">

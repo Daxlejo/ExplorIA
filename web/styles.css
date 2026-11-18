@@ -625,3 +625,37 @@ code {
 .costos__lista strong {
   color: var(--texto);
 }
+
+/* Pasos para probarlo */
+.pasos {
+  counter-reset: item;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+  max-width: 72ch;
+}
+
+.pasos li {
+  counter-increment: item;
+  position: relative;
+  padding-left: 48px;
+  min-height: 32px;
+}
+
+.pasos li::before {
+  content: counter(item);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--teal);
+  color: var(--teal-claro);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
