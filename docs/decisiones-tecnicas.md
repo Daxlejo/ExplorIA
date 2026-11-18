@@ -38,3 +38,8 @@ Registro breve de las decisiones de diseño más importantes: contexto, decisió
 - **Decisión:** al activar el Modo demo se precargan en la caché los 8 sitios de `demo/ruta-pasto.gpx` (5 tipos × 3 intensidades) con textos escritos de antemano, se usa una fuente de lugares local y se quita el tope horario con `PoliticaDemo` (Decorator).
 - **Consecuencias:** la ruta de Pasto funciona sin internet y al instante. Esos textos son fijos, no generados por la IA; fuera de Pasto la app usa la cadena real.
 
+## ADR-007 — Permiso de ubicación con `requestPermissions`
+
+- **Contexto:** `registerForActivityResult` combinado con `play-services-location` producía el error de Lint `InvalidFragmentVersionForActivityResult`.
+- **Decisión:** usar `ActivityCompat.requestPermissions` + `onRequestPermissionsResult` y un sondeo reactivo del permiso en `ProveedorUbicacionFused`.
+- **Consecuencias:** Lint queda sin errores y la pantalla pasa sola de *Sin permiso* a *Explorando* al concederlo.
