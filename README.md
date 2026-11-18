@@ -12,7 +12,7 @@ Funciona **en cualquier lugar del mundo**, no solo en Pasto, y permite elegir el
 | **Lenguaje** | Kotlin 2.4 |
 | **Interfaz** | Jetpack Compose for Wear OS, Material 3 |
 | **IA** | OpenAI Responses API |
-| **Pruebas** | 122 tests unitarios, Android Lint sin errores |
+| **Pruebas** | 132 tests unitarios, Android Lint sin errores |
 | **Sitio del proyecto** | `https://TU-PROYECTO.vercel.app` *(pendiente: reemplazar al publicar en Vercel; el código está en [`web/`](web/))* |
 | **Descargar APK** | [Última versión en GitHub Releases](https://github.com/Daxlejo/ExplorIA/releases/latest) |
 
@@ -196,16 +196,16 @@ Definido en `ui/theme` y reutilizado por todos los componentes:
 
 ## 9. Pruebas
 
-`./gradlew testDebugUnitTest` ejecuta **122 pruebas unitarias** (0 fallidas); `./gradlew lint` termina sin issues.
+`./gradlew testDebugUnitTest` ejecuta **132 pruebas unitarias** (0 fallidas); `./gradlew lint` termina sin issues.
 
 | Qué se prueba | Clases de prueba | Tests |
 |---|---|---|
-| Casos de uso (`ObtenerDatoParaUbicacion`, `ObtenerDatoAhora`, configuración, historial) | `ObtenerDatoTest`, `CasosSimplesTest` | 43 |
+| Casos de uso (`ObtenerDatoParaUbicacion`, `ObtenerDatoAhora`, configuración, historial y generación en curso) | `ObtenerDatoParaUbicacionTest`, `ObtenerDatoAhoraTest`, `CasosDeConfiguracionTest`, `CasosDeHistorialTest`, `ConfiguracionTest`, `GeneracionEnCursoTest`, `GeneracionUnicaTest` | 50 |
 | Motor automático y llegada a lugares | `MotorAutomaticoTest` | 12 |
-| Selección de tipo y filtros de relevancia / repetición | `SelectorYFiltroTest`, `FiltroRelevanciaYGeneracionTest` | 26 |
-| Políticas de intensidad y `PromptBuilder` | `PoliticaIntensidadTest`, `PromptBuilderTest` | 14 |
-| Cadena de fuentes, Wikipedia/Nominatim y limitador de 1 req/s | `CadenaFuentesLugaresTest`, `FuentesRealesYLimitadorTest` | 14 |
-| Generador de IA, caché y mapeo de errores | `GeneradorDatosYCacheTest` | 7 |
+| Selección de tipo y filtros de relevancia / repetición | `SelectorTipoDatoTest`, `FiltroRelevanciaTest`, `FiltroRepeticionTest` | 20 |
+| Políticas de intensidad y `PromptBuilder` | `PoliticaIntensidadTest`, `PromptBuilderTest` | 16 |
+| Cadena de fuentes, Wikipedia/Nominatim y limitador de 1 req/s | `CadenaFuentesLugaresTest`, `FuentesRealesYLimitadorTest` | 16 |
+| Generador de IA, guardia de salida, caché con variantes y mapeo de errores | `GeneradorDatosYCacheTest` | 12 |
 | Historial (agrupación por día y ViewModel) | `AgrupadorHistorialTest`, `HistorialViewModelTest` | 6 |
 
 El dominio se prueba con dobles de prueba (`Dobles.kt`), sin emulador ni red.
