@@ -116,3 +116,19 @@ Gracias a esta separación, en la primera fase la app funcionó con datos simula
 
 ---
 
+## 5. Patrones de diseño y dónde viven
+
+| Patrón | Dónde | Para qué |
+|---|---|---|
+| **Repository** | `RepositorioHistorial` y `RepositorioConfiguracion` (dominio) → `RepositorioHistorialRoom` y `RepositorioConfiguracionDataStore` (data) | Aislar al dominio de Room y DataStore |
+| **Chain of Responsibility** | `CadenaFuentesLugares`: Wikipedia es → Wikipedia en → Nominatim → búsqueda web de OpenAI → municipio | Probar fuentes en orden hasta hallar un hito relevante |
+| **Strategy** | `PoliticaSuave` / `PoliticaNormal` / `PoliticaIntenso` y `SelectorEnOrden` / `SelectorAleatorio` | Cambiar la regla de intensidad y la elección del tipo de dato |
+| **Decorator** | `GeneradorDatosConCache` sobre `GeneradorDatosOpenAi`; `PoliticaDemo` sobre la política activa | Agregar caché y modo demo sin tocar las clases base |
+| **Builder** | `PromptBuilder` | Armar la instrucción para la IA con el contexto recortado a 1200 caracteres |
+| **Observer** | `Flow`, `StateFlow` y `SharedFlow` en ubicación, configuración, historial y ViewModels | La UI reacciona sola a los cambios |
+| **State** | `EstadoMotor`, `EstadoUbicacion` y los `UiState` sellados de cada pantalla | Evitar combinaciones de estado inválidas |
+| **Factory** | `FabricaPoliticas`, `FabricaSelectores`, `FabricaViewModels` | Crear estrategias y ViewModels |
+| **Adapter** | `ProveedorUbicacionFused`, `ClienteHttpOkHttp`, `RelojSistema`, `VibradorAndroid`, `NarradorTts`, `EntradaMapper` | Traducir APIs de Android, OkHttp y Room al dominio |
+
+---
+
