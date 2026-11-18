@@ -221,6 +221,32 @@
         <p class="nota">Los diagramas de clases, secuencia y estados están en <a href="https://github.com/Daxlejo/ExplorIA/blob/master/docs/arquitectura.md">docs/arquitectura.md</a>.</p>
       </div>
     </section>
+
+    <section class="seccion" id="patrones" aria-labelledby="titulo-patrones">
+      <div class="contenedor">
+        <p class="seccion__eyebrow">Patrones de diseño</p>
+        <h2 id="titulo-patrones">Cada patrón resuelve un problema concreto</h2>
+        <div class="tabla-envoltura" role="region" aria-labelledby="titulo-patrones" tabindex="0">
+          <table class="tabla">
+            <caption class="solo-lectores">Patrones de diseño usados en ExplorIA, dónde viven y para qué sirven</caption>
+            <thead>
+              <tr><th scope="col">Patrón</th><th scope="col">Dónde</th><th scope="col">Para qué</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Repository</th><td><code>RepositorioHistorial</code>, <code>RepositorioConfiguracion</code></td><td>Aislar al dominio de Room y DataStore</td></tr>
+              <tr><th scope="row">Chain of Responsibility</th><td><code>CadenaFuentesLugares</code></td><td>Probar Wikipedia es → en → Nominatim → municipio hasta hallar un hito</td></tr>
+              <tr><th scope="row">Strategy</th><td><code>PoliticaSuave</code> / <code>Normal</code> / <code>Intenso</code>, <code>SelectorAleatorio</code></td><td>Cambiar la regla de intensidad y la elección del tipo de dato</td></tr>
+              <tr><th scope="row">Decorator</th><td><code>GeneradorDatosConCache</code>, <code>PoliticaDemo</code></td><td>Agregar caché y modo demo sin tocar las clases base</td></tr>
+              <tr><th scope="row">Builder</th><td><code>PromptBuilder</code></td><td>Armar la instrucción para la IA con el contexto recortado</td></tr>
+              <tr><th scope="row">Observer</th><td><code>Flow</code>, <code>StateFlow</code>, <code>SharedFlow</code></td><td>Que la UI reaccione sola a los cambios</td></tr>
+              <tr><th scope="row">State</th><td><code>EstadoMotor</code>, <code>EstadoUbicacion</code>, <code>UiState</code> sellados</td><td>Evitar combinaciones de estado inválidas</td></tr>
+              <tr><th scope="row">Factory</th><td><code>FabricaPoliticas</code>, <code>FabricaSelectores</code>, <code>FabricaViewModels</code></td><td>Crear estrategias y ViewModels</td></tr>
+              <tr><th scope="row">Adapter</th><td><code>ProveedorUbicacionFused</code>, <code>ClienteHttpOkHttp</code>, <code>NarradorTts</code></td><td>Traducir APIs de Android, OkHttp y Room al dominio</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="pie" id="creditos">
