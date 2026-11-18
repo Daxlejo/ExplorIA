@@ -93,3 +93,26 @@ Todas las capturas (permisos, estados de error, fuente grande `1.24x` y pantalla
 
 ---
 
+## 4. Arquitectura
+
+Clean Architecture ligera + MVVM + flujo de datos unidireccional (cada pantalla expone un `StateFlow<UiState>` inmutable). Las dependencias apuntan siempre hacia `domain`, que es Kotlin puro y no importa nada de `android.*`. La inyección de dependencias es manual, en `AppContainer`.
+
+```text
+app/src/main/java/com/daxlejo/datoscerca/
+├── domain/   Kotlin puro: modelos, errores, puertos (interfaces), motor de datos y casos de uso
+├── data/     Implementaciones: GPS, lugares, IA, caché, Room, DataStore, red y demo
+├── ui/       Design system, componentes, pantallas y ViewModels
+└── di/       AppContainer y FabricaViewModels
+```
+
+| Capa | Responsabilidad | Ejemplos |
+|---|---|---|
+| `domain` | Reglas de negocio, sin Android | `PoliticaIntensidad`, `FiltroRelevancia`, `PromptBuilder`, `ObtenerDatoParaUbicacion` |
+| `data` | Habla con el mundo exterior y traduce al dominio | `ProveedorUbicacionFused`, `CadenaFuentesLugares`, `GeneradorDatosOpenAi` |
+| `ui` | Muestra estado y envía eventos, sin lógica | `InicioPantalla`, `DatoViewModel`, `TarjetaDato` |
+| `di` | Conecta las implementaciones con los puertos | `AppContainer` |
+
+Gracias a esta separación, en la primera fase la app funcionó con datos simulados y en la segunda se reemplazaron por las fuentes reales **sin modificar el dominio**. Los diagramas completos (capas, clases, secuencia y máquina de estados) están en [`docs/arquitectura.md`](docs/arquitectura.md).
+
+---
+
