@@ -194,3 +194,136 @@ code {
   color: var(--texto-suave);
   margin-bottom: 40px;
 }
+
+/* Botones */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radio-pildora);
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.boton:hover {
+  transform: translateY(-1px);
+}
+
+.boton--primario {
+  background: var(--teal-claro);
+  color: var(--texto-sobre-teal);
+}
+
+.boton--primario:hover {
+  background: var(--ambar);
+  color: var(--negro);
+}
+
+.boton--secundario {
+  border: 2px solid var(--teal-claro);
+  color: var(--teal-claro);
+}
+
+.boton--secundario:hover {
+  border-color: var(--ambar);
+  color: var(--ambar);
+}
+
+/* Marco de reloj redondo: máscara circular + bisel */
+.reloj {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--negro);
+  padding: 4%;
+  box-shadow:
+    0 0 0 6px #1c1f1e,
+    0 0 0 9px #3a403e,
+    0 0 0 14px #121514,
+    0 24px 60px rgba(0, 0, 0, 0.8),
+    0 0 80px rgba(29, 158, 117, 0.18);
+}
+
+.reloj img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.reloj--grande {
+  width: min(380px, 78vw);
+}
+
+/* Hero */
+.hero {
+  position: relative;
+  padding: clamp(48px, 9vw, 110px) 0 var(--espacio-seccion);
+  background:
+    radial-gradient(circle at 75% 40%, rgba(29, 158, 117, 0.16), transparent 55%),
+    radial-gradient(circle at 70% 25%, rgba(250, 199, 117, 0.08), transparent 35%);
+}
+
+.hero__fila {
+  display: grid;
+  gap: 56px;
+  align-items: center;
+}
+
+.hero h1 {
+  font-size: clamp(3rem, 9vw, 5.5rem);
+  margin-bottom: 0.25em;
+}
+
+.hero__pitch {
+  font-family: var(--serif);
+  font-size: clamp(1.25rem, 2.6vw, 1.6rem);
+  line-height: 1.4;
+  max-width: 30ch;
+}
+
+.hero__detalle {
+  color: var(--texto-suave);
+  max-width: 52ch;
+}
+
+.hero__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 28px 0 32px;
+}
+
+.hero__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+}
+
+.hero__datos strong {
+  color: var(--ambar);
+  margin-right: 4px;
+}
+
+.hero__reloj {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.hero__reloj figcaption {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  text-align: center;
+  max-width: 34ch;
+}
