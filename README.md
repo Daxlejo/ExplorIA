@@ -13,6 +13,8 @@ Funciona **en cualquier lugar del mundo**, no solo en Pasto, y permite elegir el
 | **Interfaz** | Jetpack Compose for Wear OS, Material 3 |
 | **IA** | OpenAI Responses API |
 | **Pruebas** | 122 tests unitarios, Android Lint sin errores |
+| **Sitio del proyecto** | `https://TU-PROYECTO.vercel.app` *(pendiente: reemplazar al publicar en Vercel; el código está en [`web/`](web/))* |
+| **Descargar APK** | [Última versión en GitHub Releases](https://github.com/Daxlejo/ExplorIA/releases/latest) |
 
 ## Contenido
 
@@ -275,6 +277,7 @@ El presupuesto era de 5 USD compartidos entre tres apps, así que el diseño aho
 ├── demo/                      Ruta GPX y scripts de teletransporte (.bat y .sh)
 ├── docs/                      Arquitectura, decisiones técnicas y guías de la exposición
 ├── gradle/libs.versions.toml  Catálogo de versiones
+├── web/                       Página del proyecto (HTML y CSS estáticos, lista para Vercel)
 ├── local.properties.example   Plantilla de configuración (sin secretos)
 ├── PLAN_FASES.md              Plan de trabajo por sesiones
 └── README.md
