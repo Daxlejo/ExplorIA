@@ -32,3 +32,9 @@ Registro breve de las decisiones de diseño más importantes: contexto, decisió
 - **Decisión:** caché por `lugar + tipo + intensidad`; `reasoning.effort = "none"` en los modelos `gpt-5*`/`gpt-6*` (con el valor por defecto el razonamiento consumía todos los tokens y la respuesta salía vacía); contexto recortado a 1200 caracteres; tope de tokens de salida por intensidad (60 / 110 / 220); `store = false`; búsqueda web desactivada por defecto.
 - **Consecuencias:** cada dato cuesta una fracción de centavo y se paga una sola vez por combinación. La primera consulta en frío tarda de 4 a 7 s.
 
+## ADR-006 — Modo demo con textos precargados
+
+- **Contexto:** la exposición no debe depender del Wi-Fi del salón ni de los límites por hora.
+- **Decisión:** al activar el Modo demo se precargan en la caché los 8 sitios de `demo/ruta-pasto.gpx` (5 tipos × 3 intensidades) con textos escritos de antemano, se usa una fuente de lugares local y se quita el tope horario con `PoliticaDemo` (Decorator).
+- **Consecuencias:** la ruta de Pasto funciona sin internet y al instante. Esos textos son fijos, no generados por la IA; fuera de Pasto la app usa la cadena real.
+
