@@ -29,7 +29,18 @@ class PromptBuilderTest {
         val sistema = construir().sistema
         assertTrue(sistema.contains("únicamente los hechos del CONTEXTO"))
         assertTrue(sistema.contains("no inventes"))
-        assertTrue(sistema.contains("español"))
+        assertTrue(sistema.contains("Español"))
+    }
+
+    @Test
+    fun `prohibe metacomentarios sobre el contexto y pide afirmacion natural de respaldo`() {
+        val sistema = construir().sistema
+        assertTrue(sistema.contains("\"el contexto\""))
+        assertTrue(sistema.contains("\"la información\""))
+        assertTrue(sistema.contains("\"no se menciona\""))
+        assertTrue(sistema.contains("\"no aparece\""))
+        assertTrue(sistema.contains("dato real más interesante disponible"))
+        assertTrue(sistema.contains("afirmación natural"))
     }
 
     @Test

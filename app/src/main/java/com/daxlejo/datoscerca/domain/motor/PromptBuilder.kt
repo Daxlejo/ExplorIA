@@ -32,7 +32,7 @@ class PromptBuilder {
 
     private fun enfoque(tipo: TipoDato): String = when (tipo) {
         TipoDato.INTERESANTE -> "lo más interesante y relevante del lugar"
-        TipoDato.HISTORICO -> "un hecho histórico, con las fechas o personajes que aparezcan en el contexto"
+        TipoDato.HISTORICO -> "un hecho histórico, su origen, fechas o personajes vinculados al lugar"
         TipoDato.COMICO -> "humor ligero y amable, sin burlarse de nadie y sin cambiar los hechos"
         TipoDato.CURIOSO -> "un detalle curioso o poco conocido"
         TipoDato.GASTRONOMICO -> "comida, bebida o tradiciones de cocina relacionadas con el lugar"
@@ -51,9 +51,10 @@ class PromptBuilder {
         const val MAX_CONTEXTO_CHARS = 1200
 
         const val SISTEMA =
-            "Eres un guía local que cuenta datos breves sobre lugares. " +
+            "Eres un guía local para un caminante. " +
                 "Usa únicamente los hechos del CONTEXTO: no inventes nombres, fechas ni cifras. " +
-                "Si el contexto no alcanza para el enfoque pedido, cuenta lo que sí aparece. " +
-                "Responde siempre en español, en texto plano, sin listas, títulos ni emojis."
+                "Si falta material para el enfoque pedido, cuenta el dato real más interesante disponible como afirmación natural. " +
+                "Prohibido decir qué no sabes o usar frases como \"el contexto\", \"la información\", \"no se menciona\" o \"no aparece\". " +
+                "Español, texto plano, sin listas ni emojis."
     }
 }
