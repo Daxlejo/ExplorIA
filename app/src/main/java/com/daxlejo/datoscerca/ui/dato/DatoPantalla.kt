@@ -33,6 +33,8 @@ import com.daxlejo.datoscerca.ui.componentes.EncabezadoDato
 import com.daxlejo.datoscerca.ui.componentes.PantallaEstado
 import com.daxlejo.datoscerca.ui.componentes.PantallaProblema
 import com.daxlejo.datoscerca.ui.componentes.TextoDato
+import com.daxlejo.datoscerca.ui.componentes.entradaEscalonada
+import com.daxlejo.datoscerca.ui.theme.Animaciones
 import com.daxlejo.datoscerca.ui.theme.Duraciones
 import com.daxlejo.datoscerca.ui.theme.Espaciado
 import com.daxlejo.datoscerca.ui.theme.Tamanos
@@ -121,7 +123,13 @@ private fun DatoVisible(estado: DatoUiState.Visible, acciones: AccionesDato, ani
     ColumnaPantalla(botonBorde = { BotonOtroDato(estado.accion == AccionDato.BUSCANDO_OTRO, acciones.alPedirOtro) }) {
         item { EncabezadoDato(estado.tipo, estado.lugar, estado.distanciaMetros, progreso) }
         item { TextoDato(estado.texto, progreso, Modifier.padding(top = Espaciado.s)) }
-        item { AccionesSecundarias(estado.favorito, acciones) }
+        item {
+            AccionesSecundarias(
+                favorito = estado.favorito,
+                acciones = acciones,
+                modifier = Modifier.entradaEscalonada(progreso, desde = Animaciones.ACCIONES_DESDE, hasta = Animaciones.ACCIONES_HASTA),
+            )
+        }
         estado.aviso?.let { aviso ->
             item {
                 Text(

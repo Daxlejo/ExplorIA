@@ -33,7 +33,12 @@ class FabricaViewModels(private val contenedor: AppContainer) {
 
     fun configuracion(): ViewModelProvider.Factory = viewModelFactory {
         initializer {
-            ConfiguracionViewModel(contenedor.observarConfiguracion, contenedor.guardarConfiguracion, contenedor.narrador)
+            ConfiguracionViewModel(
+                observarConfiguracion = contenedor.observarConfiguracion,
+                guardarConfiguracion = contenedor.guardarConfiguracion,
+                narrador = contenedor.narrador,
+                alPrecargarDemo = contenedor::precargarModoDemo,
+            )
         }
     }
 

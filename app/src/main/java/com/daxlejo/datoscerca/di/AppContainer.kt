@@ -1,18 +1,28 @@
 package com.daxlejo.datoscerca.di
 
 import android.content.Context
-import android.util.Log
+import com.daxlejo.datoscerca.BuildConfig
 import com.daxlejo.datoscerca.data.configuracion.RepositorioConfiguracionDataStore
 import com.daxlejo.datoscerca.data.configuracion.almacenConfiguracion
-import com.daxlejo.datoscerca.data.fake.EscenarioFake
-import com.daxlejo.datoscerca.data.fake.FakeFuenteLugares
-import com.daxlejo.datoscerca.data.fake.FakeGeneradorDatos
-import com.daxlejo.datoscerca.data.fake.FakeProveedorUbicacion
+import com.daxlejo.datoscerca.data.demo.FuenteLugaresDemo
+import com.daxlejo.datoscerca.data.demo.RutaDemoPasto
 import com.daxlejo.datoscerca.data.historial.BaseDatosApp
 import com.daxlejo.datoscerca.data.historial.RepositorioHistorialRoom
+import com.daxlejo.datoscerca.data.ia.CacheDatos
+import com.daxlejo.datoscerca.data.ia.GeneradorDatosConCache
+import com.daxlejo.datoscerca.data.ia.GeneradorDatosOpenAi
+import com.daxlejo.datoscerca.data.lugares.CadenaFuentesLugares
+import com.daxlejo.datoscerca.data.lugares.FuenteBusquedaWebOpenAi
+import com.daxlejo.datoscerca.data.lugares.FuenteMunicipio
+import com.daxlejo.datoscerca.data.lugares.FuenteNominatim
+import com.daxlejo.datoscerca.data.lugares.FuenteWikipedia
+import com.daxlejo.datoscerca.data.lugares.LimitadorFrecuencia
 import com.daxlejo.datoscerca.data.plataforma.NarradorTts
 import com.daxlejo.datoscerca.data.plataforma.RelojSistema
 import com.daxlejo.datoscerca.data.plataforma.VibradorAndroid
+import com.daxlejo.datoscerca.data.red.ClienteHttp
+import com.daxlejo.datoscerca.data.red.ClienteHttpOkHttp
+import com.daxlejo.datoscerca.data.ubicacion.ProveedorUbicacionFused
 import com.daxlejo.datoscerca.domain.casouso.AlternarFavorito
 import com.daxlejo.datoscerca.domain.casouso.BorrarEntradaHistorial
 import com.daxlejo.datoscerca.domain.casouso.GuardarConfiguracion
@@ -21,6 +31,7 @@ import com.daxlejo.datoscerca.domain.casouso.ObservarEntrada
 import com.daxlejo.datoscerca.domain.casouso.ObservarHistorial
 import com.daxlejo.datoscerca.domain.casouso.ObtenerDatoAhora
 import com.daxlejo.datoscerca.domain.casouso.ObtenerDatoParaUbicacion
+import com.daxlejo.datoscerca.domain.error.Resultado
 import com.daxlejo.datoscerca.domain.motor.AvisadorDato
 import com.daxlejo.datoscerca.domain.motor.FabricaPoliticas
 import com.daxlejo.datoscerca.domain.motor.FabricaSelectores
@@ -37,37 +48,81 @@ import com.daxlejo.datoscerca.domain.puerto.Reloj
 import com.daxlejo.datoscerca.domain.puerto.RepositorioConfiguracion
 import com.daxlejo.datoscerca.domain.puerto.RepositorioHistorial
 import com.daxlejo.datoscerca.domain.puerto.Vibrador
-import kotlinx.coroutines.flow.MutableStateFlow
+import java.io.File
+import kotlinx.coroutines.flow.first
 
 /**
  * Inyección de dependencias manual: único lugar que conoce las implementaciones concretas.
- * En la Sesión 2 solo cambian las tres líneas marcadas como fake.
+ * Conecta ubicación real (Fused Location), la cadena de fuentes de lugares y OpenAI con caché.
  */
 class AppContainer(context: Context) {
     private val contextoApp = context.applicationContext
-    private val escenarioFake = MutableStateFlow(EscenarioFake.NORMAL)
 
     // Puertos de plataforma
     val reloj: Reloj = RelojSistema()
     val narrador: Narrador by lazy { NarradorTts(contextoApp) }
     private val vibrador: Vibrador = VibradorAndroid(contextoApp)
 
-    // Datos reales
+    // Persistencia local
     private val repositorioHistorial: RepositorioHistorial by lazy {
         RepositorioHistorialRoom(BaseDatosApp.crear(contextoApp).entradaDao())
     }
     private val repositorioConfiguracion: RepositorioConfiguracion =
         RepositorioConfiguracionDataStore(contextoApp.almacenConfiguracion)
 
-    // Datos fake (la Sesión 2 los reemplaza por ubicación, lugares e IA reales)
-    private val proveedorUbicacion: ProveedorUbicacion = FakeProveedorUbicacion(escenarioFake)
-    private val fuenteLugares: FuenteLugares = FakeFuenteLugares(escenarioFake)
-    private val generadorDatos: GeneradorDatos = FakeGeneradorDatos(escenarioFake)
-
     // Motor de datos
     private val fabricaPoliticas = FabricaPoliticas()
     private val filtroRepeticion = FiltroRepeticion()
-    private val filtroRelevancia = FiltroRelevancia(radioLlegadaMetros = FiltroRelevancia.RADIO_LLEGADA_POR_DEFECTO)
+    private val filtroRelevancia =
+        FiltroRelevancia(radioLlegadaMetros = FiltroRelevancia.RADIO_LLEGADA_POR_DEFECTO)
+
+    // Red, ubicación, lugares e IA reales
+    private val clienteHttp: ClienteHttp by lazy { ClienteHttpOkHttp() }
+    val proveedorUbicacionFused: ProveedorUbicacionFused by lazy {
+        ProveedorUbicacionFused(contextoApp)
+    }
+    private val proveedorUbicacion: ProveedorUbicacion get() = proveedorUbicacionFused
+
+    private val fuenteLugares: FuenteLugares by lazy {
+        val wikipediaEs = FuenteWikipedia(idioma = "es", clienteHttp = clienteHttp)
+        val wikipediaEn = FuenteWikipedia(idioma = "en", clienteHttp = clienteHttp)
+        val limitadorNominatim = LimitadorFrecuencia(reloj = reloj)
+        val nominatim = FuenteNominatim(
+            clienteHttp = clienteHttp,
+            limitador = limitadorNominatim,
+            fuenteWikipediaEs = wikipediaEs,
+        )
+        val busquedaWebOpenAi = FuenteBusquedaWebOpenAi(
+            clienteHttp = clienteHttp,
+            apiKey = BuildConfig.OPENAI_API_KEY,
+            modelo = BuildConfig.OPENAI_MODEL,
+            habilitada = BuildConfig.OPENAI_WEB_SEARCH,
+        )
+        val municipio = FuenteMunicipio(
+            fuenteNominatim = nominatim,
+            fuenteWikipediaEs = wikipediaEs,
+        )
+        CadenaFuentesLugares(
+            fuentes = listOf(wikipediaEs, wikipediaEn, nominatim, busquedaWebOpenAi),
+            respaldoMunicipio = municipio,
+            idsRecientes = ::obtenerIdsRecientes,
+            fuenteDemo = FuenteLugaresDemo(),
+            modoDemoActivo = ::esModoDemoActivo,
+        )
+    }
+
+    private val cacheDatos: CacheDatos by lazy {
+        CacheDatos(archivoPersistencia = File(contextoApp.filesDir, ARCHIVO_CACHE_DATOS))
+    }
+
+    private val generadorDatos: GeneradorDatos by lazy {
+        val openAi = GeneradorDatosOpenAi(
+            clienteHttp = clienteHttp,
+            apiKey = BuildConfig.OPENAI_API_KEY,
+            modelo = BuildConfig.OPENAI_MODEL,
+        )
+        GeneradorDatosConCache(delegado = openAi, cache = cacheDatos)
+    }
 
     // Compartida por el dato manual y el automático: nunca se preparan dos a la vez.
     private val generacionUnica = GeneracionUnica()
@@ -117,17 +172,33 @@ class AppContainer(context: Context) {
     }
 
     val motorAutomatico by lazy {
-        MotorAutomatico(proveedorUbicacion, repositorioConfiguracion, obtenerDatoParaUbicacion, narrador, reloj)
+        MotorAutomatico(
+            ubicacion = proveedorUbicacion,
+            configuracion = repositorioConfiguracion,
+            obtenerDato = obtenerDatoParaUbicacion,
+            narrador = narrador,
+            reloj = reloj,
+        )
     }
 
-    /** Solo para pruebas manuales de la Sesión 1: fuerza un estado de error en los fakes. */
-    fun aplicarEscenarioDePrueba(nombre: String?) {
-        val pedido = EscenarioFake.entries.firstOrNull { it.name.equals(nombre, ignoreCase = true) }
-        if (nombre != null && pedido == null) Log.w(ETIQUETA, "Escenario desconocido: $nombre. Se usa NORMAL.")
-        escenarioFake.value = pedido ?: EscenarioFake.NORMAL
+    /** Precarga en caché todos los datos de la ruta demo de Pasto para funcionar sin internet. */
+    fun precargarModoDemo() {
+        RutaDemoPasto.precargarEn(cacheDatos)
+    }
+
+    private suspend fun obtenerIdsRecientes(): Set<String> =
+        when (val recientes = repositorioHistorial.recientes(filtroRepeticion.maxRecientes)) {
+            is Resultado.Exito -> filtroRepeticion.idsAExcluir(recientes.valor, reloj.ahoraMs())
+            is Resultado.Fallo -> emptySet()
+        }
+
+    private suspend fun esModoDemoActivo(): Boolean {
+        val activa = repositorioConfiguracion.observar().first().modoDemo
+        if (activa) RutaDemoPasto.precargarEn(cacheDatos)
+        return activa
     }
 
     private companion object {
-        const val ETIQUETA = "AppContainer"
+        const val ARCHIVO_CACHE_DATOS = "cache_datos.json"
     }
 }

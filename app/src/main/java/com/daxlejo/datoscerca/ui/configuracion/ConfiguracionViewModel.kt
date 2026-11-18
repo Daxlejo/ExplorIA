@@ -28,6 +28,7 @@ class ConfiguracionViewModel(
     observarConfiguracion: ObservarConfiguracion,
     private val guardarConfiguracion: GuardarConfiguracion,
     private val narrador: Narrador,
+    private val alPrecargarDemo: () -> Unit = {},
 ) : ViewModel() {
 
     private val aviso = MutableStateFlow<AvisoConfiguracion?>(null)
@@ -59,6 +60,11 @@ class ConfiguracionViewModel(
     fun alCambiarVibracion(activa: Boolean) = guardar { it.copy(vibracionActiva = activa) }
 
     fun alCambiarPausa(activa: Boolean) = guardar { it.copy(pausa = activa) }
+
+    fun alCambiarModoDemo(activo: Boolean) {
+        if (activo) alPrecargarDemo()
+        guardar { it.copy(modoDemo = activo) }
+    }
 
     private fun guardar(avisoSiSale: AvisoConfiguracion? = null, cambio: (Configuracion) -> Configuracion) {
         viewModelScope.launch {

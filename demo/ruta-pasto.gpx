@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Datos Cerca Wear OS - Ruta Centro Historico de Pasto"
+     xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Recorrido por el Centro Histórico de Pasto</name>
+    <desc>Caminata por 8 lugares emblemáticos del centro de San Juan de Pasto (Nariño, Colombia), con coordenadas verificadas en OpenStreetMap.</desc>
+  </metadata>
+
+  <!-- Hitos verificados en OpenStreetMap -->
+  <wpt lat="1.2152045" lon="-77.2842910">
+    <name>Museo Taminango</name>
+    <desc>OSM way/115238095 - Casona colonial de 1623 y museo de artes y tradiciones populares</desc>
+  </wpt>
+  <wpt lat="1.2146178" lon="-77.2823158">
+    <name>Teatro Imperial</name>
+    <desc>OSM node/616032279 - Teatro clásico en herradura inaugurado en 1932</desc>
+  </wpt>
+  <wpt lat="1.2157273" lon="-77.2796246">
+    <name>Catedral de Pasto</name>
+    <desc>OSM way/91859876 / Wikipedia ES 7182940 - Catedral del Sagrado Corazón de Jesús</desc>
+  </wpt>
+  <wpt lat="1.2151401" lon="-77.2786570">
+    <name>Templo de San Juan Bautista</name>
+    <desc>OSM way/115215442 / Wikipedia ES 9856229 - Primera iglesia matriz de Pasto</desc>
+  </wpt>
+  <wpt lat="1.2146113" lon="-77.2782881">
+    <name>Plaza de Nariño</name>
+    <desc>OSM way/1078759141 / Wikipedia ES 9855193 - Plaza principal de San Juan de Pasto</desc>
+  </wpt>
+  <wpt lat="1.2149664" lon="-77.2766597">
+    <name>Templo de Cristo Rey</name>
+    <desc>OSM way/91859872 / Wikipedia EN 51548567 - Conjunto jesuita de Cristo Rey y San Francisco Javier</desc>
+  </wpt>
+  <wpt lat="1.2116162" lon="-77.2766887">
+    <name>Museo del Oro Nariño</name>
+    <desc>OSM node/1999514293 - Centro Cultural Leopoldo López Álvarez del Banco de la República</desc>
+  </wpt>
+  <wpt lat="1.2105614" lon="-77.2765537">
+    <name>Plaza del Carnaval</name>
+    <desc>OSM way/567219502 - Escenario principal del Carnaval de Negros y Blancos</desc>
+  </wpt>
+
+  <trk>
+    <name>Caminata Centro de Pasto</name>
+    <trkseg>
+      <!-- 0. Inicio en calle común (sin lugares emblemáticos a menos de 200 m) -->
+      <trkpt lat="1.2175000" lon="-77.2862000"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2169000" lon="-77.2856500"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2163000" lon="-77.2851000"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2157500" lon="-77.2846500"><ele>2527</ele></trkpt>
+
+      <!-- 1. Museo Taminango (OSM way/115238095) -->
+      <trkpt lat="1.2152045" lon="-77.2842910"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2150000" lon="-77.2836500"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2148000" lon="-77.2830000"><ele>2527</ele></trkpt>
+
+      <!-- 2. Teatro Imperial (OSM node/616032279) -->
+      <trkpt lat="1.2146178" lon="-77.2823158"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2149500" lon="-77.2814500"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2153500" lon="-77.2805500"><ele>2527</ele></trkpt>
+
+      <!-- 3. Catedral de Pasto (OSM way/91859876) -->
+      <trkpt lat="1.2157273" lon="-77.2796246"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2154500" lon="-77.2791500"><ele>2527</ele></trkpt>
+
+      <!-- 4. Templo de San Juan Bautista (OSM way/115215442) -->
+      <trkpt lat="1.2151401" lon="-77.2786570"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2148800" lon="-77.2784700"><ele>2527</ele></trkpt>
+
+      <!-- 5. Plaza de Nariño (OSM way/1078759141) -->
+      <trkpt lat="1.2146113" lon="-77.2782881"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2147800" lon="-77.2774500"><ele>2527</ele></trkpt>
+
+      <!-- 6. Templo de Cristo Rey / Colegio San Francisco Javier (OSM way/91859872) -->
+      <trkpt lat="1.2149664" lon="-77.2766597"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2141000" lon="-77.2766700"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2132500" lon="-77.2766800"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2124000" lon="-77.2766850"><ele>2527</ele></trkpt>
+
+      <!-- 7. Museo del Oro Nariño - Centro Cultural Banco de la República (OSM node/1999514293) -->
+      <trkpt lat="1.2116162" lon="-77.2766887"><ele>2527</ele></trkpt>
+      <trkpt lat="1.2111000" lon="-77.2766200"><ele>2527</ele></trkpt>
+
+      <!-- 8. Plaza del Carnaval y la Cultura (OSM way/567219502) -->
+      <trkpt lat="1.2105614" lon="-77.2765537"><ele>2527</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

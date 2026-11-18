@@ -81,7 +81,7 @@ private fun BoxScope.VeloSuperior() {
             .align(Alignment.TopCenter)
             .fillMaxWidth()
             .height(alto)
-            .background(Brush.verticalGradient(0f to fondo, 0.55f to fondo, 1f to Color.Transparent)),
+            .background(Brush.verticalGradient(0f to fondo, Tamanos.VELO_CORTE_SOLIDO to fondo, 1f to Color.Transparent)),
     )
 }
 

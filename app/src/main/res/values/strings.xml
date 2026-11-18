@@ -13,7 +13,7 @@
     <string name="intensidad_suave">Suave</string>
     <string name="intensidad_normal">Normal</string>
     <string name="intensidad_intenso">Intenso</string>
-    <string name="intensidad_suave_descripcion">Hasta 1 dato por hora, una frase</string>
+    <string name="intensidad_suave_descripcion">Hasta 1 por hora, una frase</string>
     <string name="intensidad_normal_descripcion">Hasta 2 por hora, dos frases</string>
     <string name="intensidad_intenso_descripcion">Hasta 4 por hora, un párrafo</string>
     <string name="intensidad_descripcion_accesible">Intensidad %1$s</string>
@@ -22,6 +22,7 @@
     <string name="accion_dato_ahora">Dato ahora</string>
     <string name="accion_otro_dato">Otro dato</string>
     <string name="accion_reintentar">Reintentar</string>
+    <string name="accion_permitir">Permitir</string>
     <string name="accion_reanudar">Reanudar</string>
     <string name="accion_escuchar">Escuchar el dato</string>
     <string name="accion_marcar_favorito">Marcar como favorito</string>
@@ -63,6 +64,8 @@
     <string name="configuracion_vibracion">Vibrar con cada dato</string>
     <string name="configuracion_pausa">Pausar datos</string>
     <string name="configuracion_pausa_descripcion">No llega ningún dato nuevo</string>
+    <string name="configuracion_modo_demo">Modo demo</string>
+    <string name="configuracion_modo_demo_descripcion">Ruta sin internet y sin límite</string>
     <string name="configuracion_cargando">Cargando tus preferencias…</string>
     <string name="configuracion_voz_no_disponible">El reloj no tiene voz en español instalada.</string>
     <string name="configuracion_error_guardado">No se pudo guardar el cambio. Intenta de nuevo.</string>

@@ -60,7 +60,7 @@ fun IndicadorIntensidad(
     intensidad: Intensidad,
     modifier: Modifier = Modifier,
     colorActivo: Color = MaterialTheme.colorScheme.primary,
-    colorInactivo: Color = MaterialTheme.colorScheme.outlineVariant,
+    colorInactivo: Color = MaterialTheme.colorScheme.outline,
 ) {
     val descripcion = stringResource(
         R.string.intensidad_descripcion_accesible,

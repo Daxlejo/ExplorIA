@@ -21,10 +21,9 @@ import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.IconButton
 import androidx.wear.compose.material3.MaterialTheme
 import com.daxlejo.datoscerca.R
+import com.daxlejo.datoscerca.ui.theme.Animaciones
 import com.daxlejo.datoscerca.ui.theme.Duraciones
 import com.daxlejo.datoscerca.ui.theme.Tamanos
-
-private const val ESCALA_REBOTE = 1.4f
 
 /** Estrella de favorito: al marcarla rebota y da un toque háptico. */
 @Composable
@@ -35,7 +34,7 @@ fun BotonFavorito(favorito: Boolean, alAlternar: () -> Unit, modifier: Modifier 
 
     LaunchedEffect(favorito) {
         if (favorito && !anterior) {
-            escala.animateTo(ESCALA_REBOTE, tween(Duraciones.REBOTE_FAVORITO_MS / 2))
+            escala.animateTo(Animaciones.ESCALA_REBOTE_FAVORITO, tween(Duraciones.REBOTE_FAVORITO_MS / 2))
             escala.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
         }
         anterior = favorito

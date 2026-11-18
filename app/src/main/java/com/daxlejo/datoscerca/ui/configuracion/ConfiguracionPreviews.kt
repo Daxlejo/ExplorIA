@@ -36,4 +36,9 @@ private fun ConfiguracionFalloAlGuardarPreview() =
 
 @PreviewsWear
 @Composable
+private fun ConfiguracionModoDemoPreview() =
+    Muestra(ConfiguracionUiState.Lista(Configuracion.PorDefecto.copy(modoDemo = true)))
+
+@PreviewsWear
+@Composable
 private fun ConfiguracionCargandoPreview() = Muestra(ConfiguracionUiState.Cargando)

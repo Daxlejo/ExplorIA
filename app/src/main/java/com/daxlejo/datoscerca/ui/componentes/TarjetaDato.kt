@@ -3,6 +3,7 @@ package com.daxlejo.datoscerca.ui.componentes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,6 +14,7 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import com.daxlejo.datoscerca.R
 import com.daxlejo.datoscerca.domain.modelo.TipoDato
+import com.daxlejo.datoscerca.ui.theme.Animaciones
 import com.daxlejo.datoscerca.ui.theme.Espaciado
 import com.daxlejo.datoscerca.ui.theme.Tamanos
 import com.daxlejo.datoscerca.ui.theme.TiposDatosCerca
@@ -41,31 +43,35 @@ fun EncabezadoDato(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Espaciado.xs),
     ) {
-        BombilloEncendido(encendido = { (progreso() / 0.45f).coerceIn(0f, 1f) })
-        ChipTipoDato(tipo, Modifier.entradaEscalonada(progreso, desde = 0.15f, hasta = 0.55f))
+        BombilloEncendido(encendido = { (progreso() / Animaciones.BOMBILLO_HASTA).coerceIn(0f, 1f) })
+        ChipTipoDato(tipo, Modifier.entradaEscalonada(progreso, desde = Animaciones.CHIP_DESDE, hasta = Animaciones.CHIP_HASTA))
         Text(
             text = lugar,
-            modifier = Modifier.entradaEscalonada(progreso, desde = 0.3f, hasta = 0.7f),
+            modifier = Modifier.entradaEscalonada(progreso, desde = Animaciones.LUGAR_DESDE, hasta = Animaciones.LUGAR_HASTA),
             style = TiposDatosCerca.lugar,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(R.string.dato_distancia, distanciaMetros),
-            modifier = Modifier.entradaEscalonada(progreso, desde = 0.4f, hasta = 0.8f),
+            modifier = Modifier.entradaEscalonada(progreso, desde = Animaciones.DISTANCIA_DESDE, hasta = Animaciones.DISTANCIA_HASTA),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
 
-/** Cuerpo del dato: alineado a la izquierda para leerlo cómodo. */
+/** Cuerpo del dato: centrado y con margen lateral seguro para no chocar con el bisel curvo. */
 @Composable
 fun TextoDato(texto: String, progreso: () -> Float, modifier: Modifier = Modifier) {
     Text(
         text = texto,
-        modifier = modifier.fillMaxWidth().entradaEscalonada(progreso, desde = 0.55f, hasta = 1f),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Espaciado.m)
+            .entradaEscalonada(progreso, desde = Animaciones.TEXTO_DESDE, hasta = Animaciones.TEXTO_HASTA),
         style = TiposDatosCerca.dato,
         color = MaterialTheme.colorScheme.onSurface,
+        textAlign = TextAlign.Center,
     )
 }

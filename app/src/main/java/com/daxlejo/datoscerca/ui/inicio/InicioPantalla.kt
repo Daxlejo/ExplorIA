@@ -1,6 +1,8 @@
 package com.daxlejo.datoscerca.ui.inicio
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,9 +25,11 @@ import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import com.daxlejo.datoscerca.R
+import com.daxlejo.datoscerca.domain.error.ErrorDato
 import com.daxlejo.datoscerca.ui.componentes.BotonBorde
 import com.daxlejo.datoscerca.ui.componentes.ColumnaPantalla
 import com.daxlejo.datoscerca.ui.componentes.PulsoExplorador
+import com.daxlejo.datoscerca.ui.theme.Duraciones
 import com.daxlejo.datoscerca.ui.theme.Espaciado
 import com.daxlejo.datoscerca.ui.theme.Tamanos
 import com.daxlejo.datoscerca.ui.util.presentacion
@@ -36,6 +40,7 @@ fun InicioRuta(
     alAbrirDato: (Long) -> Unit,
     alAbrirHistorial: () -> Unit,
     alAbrirConfiguracion: () -> Unit,
+    alSolicitarPermiso: () -> Unit = {},
 ) {
     val estado by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel) {
@@ -51,6 +56,7 @@ fun InicioRuta(
         alReanudar = viewModel::alReanudar,
         alAbrirHistorial = alAbrirHistorial,
         alAbrirConfiguracion = alAbrirConfiguracion,
+        alSolicitarPermiso = alSolicitarPermiso,
     )
 }
 
@@ -61,9 +67,10 @@ fun InicioPantalla(
     alReanudar: () -> Unit,
     alAbrirHistorial: () -> Unit,
     alAbrirConfiguracion: () -> Unit,
+    alSolicitarPermiso: () -> Unit = {},
 ) {
     ColumnaPantalla(
-        botonBorde = { AccionPrincipal(estado, alPedirDato, alReanudar) },
+        botonBorde = { AccionPrincipal(estado, alPedirDato, alReanudar, alSolicitarPermiso) },
     ) {
         item {
             Column(
@@ -78,12 +85,19 @@ fun InicioPantalla(
 }
 
 @Composable
-private fun AccionPrincipal(estado: InicioUiState, alPedirDato: () -> Unit, alReanudar: () -> Unit) {
+private fun AccionPrincipal(
+    estado: InicioUiState,
+    alPedirDato: () -> Unit,
+    alReanudar: () -> Unit,
+    alSolicitarPermiso: () -> Unit,
+) {
     when (estado) {
         InicioUiState.EnPausa ->
             BotonBorde(stringResource(R.string.accion_reanudar), alReanudar)
-        is InicioUiState.Problema ->
-            BotonBorde(stringResource(estado.error.presentacion().accion), alPedirDato)
+        is InicioUiState.Problema -> {
+            val accion = if (estado.error == ErrorDato.SinPermiso) alSolicitarPermiso else alPedirDato
+            BotonBorde(stringResource(estado.error.presentacion().accion), accion)
+        }
         else -> BotonBorde(
             etiqueta = stringResource(R.string.accion_dato_ahora),
             alPulsar = alPedirDato,
@@ -107,18 +121,24 @@ private fun FilaCentral(estado: InicioUiState, alAbrirHistorial: () -> Unit, alA
 
 @Composable
 private fun GlifoDeEstado(estado: InicioUiState) {
-    Box(Modifier.size(Tamanos.glifoInicio), contentAlignment = Alignment.Center) {
-        when (estado) {
-            InicioUiState.Iniciando, InicioUiState.BuscandoDato ->
-                CircularProgressIndicator(Modifier.size(Tamanos.glifoEstado))
-            InicioUiState.EnPausa -> PulsoExplorador(activo = false, icono = R.drawable.ic_pausa)
-            is InicioUiState.Problema -> Icon(
-                painter = painterResource(estado.error.presentacion().icono),
-                contentDescription = null,
-                modifier = Modifier.size(Tamanos.glifoEstado),
-                tint = MaterialTheme.colorScheme.error,
-            )
-            is InicioUiState.Explorando -> PulsoExplorador(activo = true)
+    Crossfade(
+        targetState = estado,
+        animationSpec = tween(Duraciones.TRANSICION_ESTADO_MS),
+        label = "glifo_estado",
+    ) { actual ->
+        Box(Modifier.size(Tamanos.glifoInicio), contentAlignment = Alignment.Center) {
+            when (actual) {
+                InicioUiState.Iniciando, InicioUiState.BuscandoDato ->
+                    CircularProgressIndicator(Modifier.size(Tamanos.glifoEstado))
+                InicioUiState.EnPausa -> PulsoExplorador(activo = false, icono = R.drawable.ic_pausa)
+                is InicioUiState.Problema -> Icon(
+                    painter = painterResource(actual.error.presentacion().icono),
+                    contentDescription = null,
+                    modifier = Modifier.size(Tamanos.glifoEstado),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+                is InicioUiState.Explorando -> PulsoExplorador(activo = true)
+            }
         }
     }
 }

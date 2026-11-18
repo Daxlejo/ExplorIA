@@ -24,10 +24,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import com.daxlejo.datoscerca.R
+import com.daxlejo.datoscerca.ui.theme.Animaciones
 import com.daxlejo.datoscerca.ui.theme.Duraciones
 import com.daxlejo.datoscerca.ui.theme.Tamanos
-
-private const val ONDAS = 2
 
 /** Pin con ondas que se expanden mientras la app explora; quieto cuando no hay exploración. */
 @Composable
@@ -54,15 +53,17 @@ private fun OndasExpansivas(color: Color) {
         label = "fase",
     )
     Canvas(Modifier.fillMaxSize()) {
-        repeat(ONDAS) { indice -> onda(color, avance = (fase + indice.toFloat() / ONDAS) % 1f) }
+        repeat(Animaciones.ONDAS_EXPLORADOR) { indice ->
+            onda(color, avance = (fase + indice.toFloat() / Animaciones.ONDAS_EXPLORADOR) % 1f)
+        }
     }
 }
 
 private fun DrawScope.onda(color: Color, avance: Float) {
-    val radioMinimo = size.minDimension * 0.22f
-    val radioMaximo = size.minDimension * 0.5f - Tamanos.grosorOnda.toPx()
+    val radioMinimo = size.minDimension * Animaciones.RADIO_MINIMO_ONDA
+    val radioMaximo = size.minDimension * Animaciones.RADIO_MAXIMO_ONDA - Tamanos.grosorOnda.toPx()
     drawCircle(
-        color = color.copy(alpha = (1f - avance) * 0.7f),
+        color = color.copy(alpha = (1f - avance) * Animaciones.ALFA_MAXIMA_ONDA),
         radius = radioMinimo + (radioMaximo - radioMinimo) * avance,
         style = Stroke(Tamanos.grosorOnda.toPx()),
     )
@@ -74,16 +75,20 @@ fun BombilloEncendido(encendido: () -> Float, modifier: Modifier = Modifier) {
     val color = MaterialTheme.colorScheme.tertiary
     Box(modifier.size(Tamanos.glifoEstado), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            drawCircle(Brush.radialGradient(listOf(color.copy(alpha = 0.45f * encendido()), Color.Transparent)))
+            drawCircle(
+                Brush.radialGradient(
+                    listOf(color.copy(alpha = Animaciones.ALFA_RESPLANDOR_BOMBILLO * encendido()), Color.Transparent),
+                ),
+            )
         }
         Icon(
             painter = painterResource(R.drawable.ic_bombillo),
             contentDescription = null,
             modifier = Modifier.size(Tamanos.icono).graphicsLayer {
-                val escala = 0.6f + 0.4f * encendido()
+                val escala = Animaciones.ESCALA_BASE_BOMBILLO + Animaciones.ESCALA_RANGO_BOMBILLO * encendido()
                 scaleX = escala
                 scaleY = escala
-                alpha = 0.3f + 0.7f * encendido()
+                alpha = Animaciones.ALFA_BASE_BOMBILLO + Animaciones.ALFA_RANGO_BOMBILLO * encendido()
             },
             tint = color,
         )

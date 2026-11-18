@@ -39,6 +39,7 @@ data class AccionesConfiguracion(
     val alCambiarVoz: (Boolean) -> Unit = {},
     val alCambiarVibracion: (Boolean) -> Unit = {},
     val alCambiarPausa: (Boolean) -> Unit = {},
+    val alCambiarModoDemo: (Boolean) -> Unit = {},
 )
 
 @Composable
@@ -52,6 +53,7 @@ fun ConfiguracionRuta(viewModel: ConfiguracionViewModel) {
             alCambiarVoz = viewModel::alCambiarVoz,
             alCambiarVibracion = viewModel::alCambiarVibracion,
             alCambiarPausa = viewModel::alCambiarPausa,
+            alCambiarModoDemo = viewModel::alCambiarModoDemo,
         )
     }
     ConfiguracionPantalla(estado, acciones)
@@ -153,6 +155,16 @@ private fun TransformingLazyColumnScope.seccionAvisos(
             transformation = SurfaceTransformation(transformacion),
             label = { Text(stringResource(R.string.configuracion_pausa)) },
             secondaryLabel = { Text(stringResource(R.string.configuracion_pausa_descripcion)) },
+        )
+    }
+    item {
+        SwitchButton(
+            checked = configuracion.modoDemo,
+            onCheckedChange = acciones.alCambiarModoDemo,
+            modifier = Modifier.fillMaxWidth().transformedHeight(this, transformacion),
+            transformation = SurfaceTransformation(transformacion),
+            label = { Text(stringResource(R.string.configuracion_modo_demo)) },
+            secondaryLabel = { Text(stringResource(R.string.configuracion_modo_demo_descripcion)) },
         )
     }
 }

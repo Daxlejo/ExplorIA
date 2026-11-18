@@ -16,8 +16,12 @@ data class PresentacionEstado(
 )
 
 fun ErrorDato.presentacion(): PresentacionEstado = when (this) {
-    ErrorDato.SinPermiso ->
-        PresentacionEstado(R.drawable.ic_candado, R.string.error_permiso_titulo, R.string.error_permiso_mensaje)
+    ErrorDato.SinPermiso -> PresentacionEstado(
+        R.drawable.ic_candado,
+        R.string.error_permiso_titulo,
+        R.string.error_permiso_mensaje,
+        R.string.accion_permitir,
+    )
     ErrorDato.SinGps ->
         PresentacionEstado(R.drawable.ic_gps, R.string.error_gps_titulo, R.string.error_gps_mensaje)
     ErrorDato.SinInternet ->

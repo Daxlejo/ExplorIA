@@ -27,7 +27,10 @@ private object Rutas {
 
 /** Raíz de la interfaz: tema, AppScaffold (hora compartida) y navegación con deslizar para volver. */
 @Composable
-fun AppDatosCerca(fabrica: FabricaViewModels) {
+fun AppDatosCerca(
+    fabrica: FabricaViewModels,
+    alSolicitarPermiso: () -> Unit = {},
+) {
     DatosCercaTheme {
         AppScaffold {
             val navegador = rememberSwipeDismissableNavController()
@@ -38,6 +41,7 @@ fun AppDatosCerca(fabrica: FabricaViewModels) {
                         alAbrirDato = navegador::abrirDato,
                         alAbrirHistorial = { navegador.navigate(Rutas.HISTORIAL) },
                         alAbrirConfiguracion = { navegador.navigate(Rutas.CONFIGURACION) },
+                        alSolicitarPermiso = alSolicitarPermiso,
                     )
                 }
                 composable(
