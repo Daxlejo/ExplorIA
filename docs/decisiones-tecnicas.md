@@ -26,3 +26,9 @@ Registro breve de las decisiones de diseño más importantes: contexto, decisió
 - **Decisión:** `FiltroRelevancia` solo deja pasar lugares con artículo en Wikipedia o etiquetas turísticas/históricas/patrimoniales, a 150–250 m. Se esperan 1–2 datos por hora según los sitios por los que se pase.
 - **Consecuencias:** una calle común nunca dispara un dato automático. Lugares sin artículo ni etiquetas no se detectan.
 
+## ADR-005 — Control de costos de la IA
+
+- **Contexto:** el presupuesto de OpenAI era de 5 USD compartidos entre tres apps.
+- **Decisión:** caché por `lugar + tipo + intensidad`; `reasoning.effort = "none"` en los modelos `gpt-5*`/`gpt-6*` (con el valor por defecto el razonamiento consumía todos los tokens y la respuesta salía vacía); contexto recortado a 1200 caracteres; tope de tokens de salida por intensidad (60 / 110 / 220); `store = false`; búsqueda web desactivada por defecto.
+- **Consecuencias:** cada dato cuesta una fracción de centavo y se paga una sola vez por combinación. La primera consulta en frío tarda de 4 a 7 s.
+
