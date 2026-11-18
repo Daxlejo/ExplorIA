@@ -14,3 +14,9 @@ Cada bloque indica **qué haces** y **qué dices**. No hace falta memorizarlo pa
 
 Cuando salte un dato: «Vibra y muestra el tipo de dato, el lugar, la distancia y el texto. Puedo escucharlo, marcarlo como favorito o pedir otro.»
 
+## 2. Cualquier lugar del mundo (1 min)
+
+**Haces:** `.\demo\teletransporte.bat bogota` → **Dato ahora**; luego `cartagena` y `paris`.
+
+**Dices:** «La app no está atada a Pasto. En Bogotá encuentra la Catedral Primada; en Cartagena, la Torre del Reloj; en París, la Torre Eiffel, con el dato en español. Funciona en cualquier punto del planeta porque los lugares se buscan en vivo en Wikipedia y OpenStreetMap.»
+
