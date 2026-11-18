@@ -60,6 +60,7 @@ class FuenteLugaresDemo(
  */
 object RutaDemoPasto {
 
+    // Parada ficticia: solo es un punto de partida sin relevancia para mostrar que no se dispara ningún dato.
     private val tiendaBarrio = ParadaDemo(
         idPrincipal = "nominatim:node:tienda-barrio",
         nombre = "Tienda El Mirador",
