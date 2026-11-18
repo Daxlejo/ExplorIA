@@ -42,3 +42,11 @@ Cuando salte un dato: «Vibra y muestra el tipo de dato, el lugar, la distancia 
 
 **Dices:** «Todo queda en un historial agrupado por día. También sirve para no repetir: un lugar mostrado hace poco no vuelve a salir.»
 
+## 7. Cómo se construyó (1 min 30 s)
+
+- **Lenguaje y plataforma:** Kotlin para Wear OS, con Jetpack Compose y Material 3 para pantallas redondas.
+- **Arquitectura:** Clean Architecture + MVVM con flujo de datos unidireccional, en cuatro capas: `domain` (Kotlin puro, sin Android), `data` (GPS, Wikipedia, OpenStreetMap, OpenAI, Room, caché), `ui` (4 pantallas con ViewModel y estado inmutable) y `di` (contenedor manual). «Por eso en la primera fase usamos datos simulados y en la segunda los cambiamos por los reales sin tocar el dominio.»
+- **Patrones de diseño:** Chain of Responsibility (fuentes de lugares), Strategy (intensidades y selección de tipo), Decorator (caché y modo demo), Builder (prompt), Repository, Observer (Flow), State y Adapter.
+- **Tecnologías:** Fused Location, Wikipedia GeoSearch, OSM Nominatim (1 petición/segundo), OpenAI Responses API, OkHttp, kotlinx.serialization, Room, DataStore y TextToSpeech.
+- **Calidad:** 122 tests unitarios en verde y Lint sin errores; unas 6.000 líneas en 76 archivos Kotlin.
+
