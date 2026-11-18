@@ -12,6 +12,9 @@ sealed interface ErrorDato {
     data object EnPausa : ErrorDato
     data object VozNoDisponible : ErrorDato
 
+    /** Ya se está preparando otro dato (manual o automático); no se generan dos seguidos. */
+    data object GeneracionEnCurso : ErrorDato
+
     /** La fuente de lugares respondió con un error (no es lo mismo que "no hay nada cerca"). */
     data class FuenteNoDisponible(val causa: String?) : ErrorDato
     data class ErrorIa(val causa: String?) : ErrorDato

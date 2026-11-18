@@ -106,8 +106,11 @@ class InicioViewModel(
     }
 
     // La pausa ya la refleja el motor; guardarla aquí la dejaría pegada tras reanudar desde Configuración.
-    private fun alFallar(error: ErrorDato): PeticionManual =
-        if (error == ErrorDato.EnPausa) PeticionManual.Reposo else PeticionManual.Fallida(error)
+    // Si ya venía un dato automático en camino, ese dato se abrirá solo: no es un error.
+    private fun alFallar(error: ErrorDato): PeticionManual = when (error) {
+        ErrorDato.EnPausa, ErrorDato.GeneracionEnCurso -> PeticionManual.Reposo
+        else -> PeticionManual.Fallida(error)
+    }
 
     private fun desdeMotor(motor: EstadoMotor): InicioUiState = when (motor) {
         EstadoMotor.Iniciando -> InicioUiState.Iniciando

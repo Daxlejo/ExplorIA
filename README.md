@@ -1,6 +1,6 @@
 # Datos Cerca — app para Wear OS
 
-App de reloj que, según dónde estés, te cuenta un dato sobre lo que tienes cerca. Tú eliges el tipo de dato (interesante, histórico, cómico, curioso, gastronómico) y la intensidad (cada cuánto llegan y qué tan largos son).
+App de reloj que, según dónde estés, te cuenta un dato sobre lo que tienes cerca. Tú eliges el tipo de dato (interesante, histórico, cómico, curioso, gastronómico) y la intensidad (cuántos llegan por hora y qué tan largos son). Solo habla de lugares emblemáticos: plazas, iglesias, museos, monumentos.
 
 Proyecto de la materia **Diseño de Software**: la arquitectura y el diseño visual pesan tanto como la funcionalidad.
 
@@ -12,7 +12,8 @@ Proyecto de la materia **Diseño de Software**: la arquitectura y el diseño vis
 - **Dato:** tipo, lugar, distancia y texto, con entrada animada. Se puede escuchar, marcar como favorito, borrar o pedir otro.
 - **Configuración:** tipos (selección múltiple, mínimo uno), aleatorio, intensidad en tres niveles, voz, vibración y pausa. Se guarda con DataStore.
 - **Historial:** agrupado por día, con filtro de favoritos. Se guarda con Room.
-- **Dato automático:** una caminata simulada recorre seis lugares del centro de Pasto; al llegar a cada uno, el motor decide si toca un dato según la intensidad.
+- **Dato automático:** una caminata simulada recorre el centro de Pasto. Al pasar a menos de 200 m de un lugar emblemático, el motor da un dato si cabe en el límite por hora: Suave 1, Normal 2, Intenso 4 (ventana móvil de una hora). El modo demo quita ese límite. La ruta pasa también por una tienda de barrio, que no es relevante y nunca da datos.
+- **"Dato ahora":** ignora el límite por hora y no lo gasta. Si ya viene un dato automático en camino, no se pide otro: se espera ese.
 
 ## Requisitos
 
@@ -70,7 +71,7 @@ app/src/main/java/com/daxlejo/datoscerca/
 └── di/       AppContainer y FabricaViewModels
 ```
 
-Patrones aplicados: Repository, Strategy (intensidad y selección de tipo), Factory, Builder (prompt), Observer (Flows), State, Adapter y el contrato listo para Chain of Responsibility. El detalle, con diagramas, está en [docs/arquitectura.md](docs/arquitectura.md).
+Patrones aplicados: Repository, Strategy (intensidad y selección de tipo), Decorator (modo demo), Factory, Builder (prompt), Observer (Flows), State, Adapter y el contrato listo para Chain of Responsibility. El detalle, con diagramas, está en [docs/arquitectura.md](docs/arquitectura.md).
 
 ## Design system
 
@@ -88,7 +89,7 @@ Las pantallas usan `AppScaffold`, `ScreenScaffold`, `TransformingLazyColumn`, `E
 ./gradlew testDebugUnitTest
 ```
 
-Cubren la política de intensidad, el selector de tipo, la anti-repetición, el `PromptBuilder`, los casos de uso, el motor automático y el agrupado del historial, todo con dobles en memoria.
+Cubren el límite por hora de cada intensidad (ventana móvil), el modo demo, el dato manual, el filtro de relevancia, la generación única, el selector de tipo, la anti-repetición, el `PromptBuilder`, los casos de uso, el motor automático, el historial (incluido un error de lectura) y su agrupado, todo con dobles en memoria.
 
 ## Capturas
 

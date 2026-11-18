@@ -158,18 +158,18 @@ class MotorAutomaticoTest {
     }
 
     @Test
-    fun `quieto en un lugar recibe el dato cuando se cumple el intervalo`() = runTest {
-        val banco = banco(Configuracion.PorDefecto.copy(intensidad = Intensidad.NORMAL))
+    fun `quieto en un lugar recibe el dato cuando se libera el cupo de la hora`() = runTest {
+        val banco = banco(Configuracion.PorDefecto.copy(intensidad = Intensidad.SUAVE))
         val motor = motor(banco)
         val nuevos = arrancar(motor)
         banco.ubicacion.flujo.value = EstadoUbicacion.Disponible(catedralCoordenada)
-        val duranteElIntervalo = nuevos.size
+        val conElCupoLleno = nuevos.size
         val casiIgual = Coordenada(catedralCoordenada.latitud + 0.00001, catedralCoordenada.longitud)
 
-        banco.reloj.avanzarMinutos(3)
+        banco.reloj.avanzarMinutos(61)
         banco.ubicacion.flujo.value = EstadoUbicacion.Disponible(casiIgual)
 
-        assertEquals(1, duranteElIntervalo)
+        assertEquals(1, conElCupoLleno)
         assertEquals(listOf(plaza.id, catedral.id), nuevos.map { it.dato.lugar.id })
     }
 

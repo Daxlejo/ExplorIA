@@ -74,7 +74,9 @@ Son **2 sesiones**. Cada una se ejecuta en una sesión nueva de Claude Code.
   1. Wikipedia GeoSearch: primero `es`, luego `en`, más el resumen del artículo.
   2. OpenStreetMap Nominatim (geocodificación inversa).
   3. Respaldo: OpenAI Responses API con búsqueda web, **solo si `OPENAI_WEB_SEARCH=true`** (apagada por defecto para cuidar el presupuesto).
-  4. Último recurso: dato sobre el municipio o la región.
+  4. Último recurso: dato sobre el municipio o la región (solo con "Dato ahora", nunca automático).
+- **Solo lugares relevantes:** el reloj no habla de cualquier sitio, solo de lugares emblemáticos o reconocidos de la ciudad, pueblo o municipio (plazas, iglesias, museos, monumentos, edificios históricos, parques importantes). Criterio: que tenga artículo en Wikipedia o etiquetas OSM `tourism`/`historic` relevantes, y que la persona pase cerca (~150–250 m). Si no pasa por lugares así, no hay datos.
+- **"Dato ahora":** botón manual que siempre responde con el lugar relevante más cercano o, si no hay, con un dato del municipio. Ignora los límites de frecuencia. En la exposición, con él se muestra el dato del lugar donde están.
 - **Dato generado con OpenAI**, siempre basado en el contexto real obtenido. La IA cambia el tono, no inventa hechos.
 - **Configuración:**
   - Tipos con selección múltiple: Interesante, Histórico, Cómico, Curioso, Gastronómico (mínimo uno).
@@ -83,9 +85,11 @@ Son **2 sesiones**. Cada una se ejecuta en una sesión nueva de Claude Code.
 
     | Nivel | Frecuencia | Largo |
     |---|---|---|
-    | Suave | máx. 1 dato / ~10 min | 1 frase |
-    | Normal | lugar nuevo, mín. ~3 min entre datos | 2 frases |
-    | Intenso | cada lugar nuevo | párrafo corto |
+    | Suave | máx. 1 dato por hora | 1 frase |
+    | Normal | máx. 2 datos por hora | 2 frases |
+    | Intenso | máx. 4 datos por hora | párrafo corto |
+
+    Siempre solo al pasar por un lugar relevante; si no pasa por ninguno, no sale nada. El **modo demo** ignora estos límites para que la ruta de la exposición muestre un dato en cada parada.
 
   - Voz (TTS), vibración y pausa, cada una activable o desactivable.
 - **Historial** (Room): lugar, texto, tipo, fecha y hora, coordenadas y favorito. Agrupado por día; tocar una entrada abre el dato; se puede marcar favorito y borrar. También evita repetir lugares recientes.
@@ -162,7 +166,8 @@ TASKS:
 1. Project: standalone Wear OS app (Kotlin, Gradle Kotlin DSL, version catalog, minSdk 30, latest stable Compose for Wear OS Material 3, Room, DataStore). Verify current stable versions in official docs; do not guess. Read OPENAI_API_KEY, OPENAI_MODEL and OPENAI_WEB_SEARCH (boolean, default false) from local.properties into BuildConfig; add local.properties.example. Never hardcode secrets.
 2. Architecture: packages domain (pure Kotlin), data, ui, di (manual AppContainer). Domain models in Spanish: Coordenada, Lugar, Dato, TipoDato, Intensidad, Configuracion, EntradaHistorial. Domain interfaces: ProveedorUbicacion, FuenteLugares, GeneradorDatos, RepositorioHistorial, RepositorioConfiguracion.
 3. Domain fact engine (pure Kotlin, unit tested):
-   - PoliticaIntensidad (Strategy per level): Suave = max 1 fact per ~10 min, 1 sentence; Normal = new place and min ~3 min between facts, 2 sentences; Intenso = every new place, short paragraph. Inject a clock abstraction so it is testable.
+   - PoliticaIntensidad (Strategy per level), applied only when the user passes near a RELEVANT place (landmark/emblematic): Suave = max 1 fact per hour, 1 sentence; Normal = max 2 facts per hour, 2 sentences; Intenso = max 4 facts per hour, short paragraph. Demo mode bypasses the hourly caps. The manual "Dato ahora" action always bypasses the caps. Inject a clock abstraction so it is testable.
+   - FiltroRelevancia: a place qualifies only if it is a landmark (has a Wikipedia article, or relevant OSM tourism/historic tags) and is within ~150–250 m.
    - SelectorTipoDato (Strategy): fixed selection, or random among checked types when Aleatorio is on. At least one type must stay selected.
    - Anti-repetition based on recent history.
    - PromptBuilder (Builder): place context + TipoDato + Intensidad; instructs the model to use only the given context and answer in Spanish.
@@ -214,6 +219,8 @@ Se reemplazan los fakes por las implementaciones reales, se pule el diseño y se
   3. Ejecutar el script de teletransporte a Bogotá y París: sale un dato de cada ciudad.
   4. Cambiar a tipo "Cómico" e intensidad "Intenso" y notar la diferencia.
   5. Apagar el wifi del PC con el modo demo activo: la ruta sigue funcionando.
+  6. Poner la ubicación en una calle sin lugares emblemáticos: no debe salir ningún dato automático, pero "Dato ahora" sí responde (dato del municipio).
+  7. Poner la ubicación del sitio de la exposición y pulsar "Dato ahora": sale un dato de ese lugar o de su entorno.
 - Leer el README y seguir el guion de demo de principio a fin.
 
 ```text
@@ -230,7 +237,7 @@ TASKS:
    b) Nominatim reverse geocoding (max 1 request/second, custom User-Agent per its usage policy).
    c) OpenAI Responses API with the web search tool as fallback, ONLY when BuildConfig.OPENAI_WEB_SEARCH is true (read from local.properties, default false). Budget is very tight.
    d) Final fallback: municipality/region fact.
-   Descriptive User-Agent for Wikipedia and Nominatim. Choose the closest place not shown recently.
+   Descriptive User-Agent for Wikipedia and Nominatim. Apply FiltroRelevancia: only landmarks/emblematic places (Wikipedia article or relevant OSM tourism/historic tags) within ~150–250 m qualify; ordinary streets, shops, or houses never trigger a fact. Choose the most relevant nearby place not shown recently. The municipality/region fallback is used only for the manual "Dato ahora" action, never automatically.
 3. AI: real GeneradorDatos with OpenAI (Retrofit or OkHttp + kotlinx.serialization), model from BuildConfig.OPENAI_MODEL, using the existing PromptBuilder. Check the current OpenAI API docs for the request format; do not guess. Timeouts and errors mapped to domain errors. Token budget is very tight (shared 5 USD): keep the prompt short, trim the place context to ~1200 characters, cap max_output_tokens per intensity, never call OpenAI when the fact is cached or the place was shown recently, and during manual testing prefer demo mode/cache over repeated live calls.
 4. Cache by place + type + intensity. Demo mode toggle (in settings) that preloads the cache for the demo route so it works without internet.
 5. Unit tests: source chain fallback order (with fakes), cache behavior, error mapping. Keep all Session 1 tests green.

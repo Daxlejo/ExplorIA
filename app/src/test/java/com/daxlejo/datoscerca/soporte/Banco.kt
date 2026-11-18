@@ -7,7 +7,9 @@ import com.daxlejo.datoscerca.domain.modelo.Lugar
 import com.daxlejo.datoscerca.domain.motor.AvisadorDato
 import com.daxlejo.datoscerca.domain.motor.FabricaPoliticas
 import com.daxlejo.datoscerca.domain.motor.FabricaSelectores
+import com.daxlejo.datoscerca.domain.motor.FiltroRelevancia
 import com.daxlejo.datoscerca.domain.motor.FiltroRepeticion
+import com.daxlejo.datoscerca.domain.motor.GeneracionUnica
 import com.daxlejo.datoscerca.domain.motor.ProducirDato
 import kotlin.random.Random
 
@@ -25,8 +27,10 @@ class Banco(
     val vibrador = VibradorEspia()
     val narrador = NarradorEspia()
 
-    private val fabricaPoliticas = FabricaPoliticas(reloj)
-    private val filtro = FiltroRepeticion()
+    private val fabricaPoliticas = FabricaPoliticas()
+    private val filtroRepeticion = FiltroRepeticion()
+    val filtroRelevancia = FiltroRelevancia()
+    private val generacion = GeneracionUnica()
     private val producir = ProducirDato(
         generador = generador,
         historial = historial,
@@ -36,9 +40,11 @@ class Banco(
         reloj = reloj,
     )
 
-    val obtenerDatoParaUbicacion =
-        ObtenerDatoParaUbicacion(fuente, historial, configuracion, fabricaPoliticas, filtro, producir, reloj)
+    val obtenerDatoParaUbicacion = ObtenerDatoParaUbicacion(
+        fuente, historial, configuracion, fabricaPoliticas, filtroRepeticion, filtroRelevancia, producir, generacion, reloj,
+    )
 
-    val obtenerDatoAhora =
-        ObtenerDatoAhora(ubicacion, fuente, historial, configuracion, filtro, producir, reloj)
+    val obtenerDatoAhora = ObtenerDatoAhora(
+        ubicacion, fuente, historial, configuracion, filtroRepeticion, filtroRelevancia, producir, generacion, reloj,
+    )
 }

@@ -13,9 +13,9 @@
     <string name="intensidad_suave">Suave</string>
     <string name="intensidad_normal">Normal</string>
     <string name="intensidad_intenso">Intenso</string>
-    <string name="intensidad_suave_descripcion">Un dato cada 10 min, una frase</string>
-    <string name="intensidad_normal_descripcion">En cada lugar nuevo, dos frases</string>
-    <string name="intensidad_intenso_descripcion">Todos los lugares, un párrafo</string>
+    <string name="intensidad_suave_descripcion">Hasta 1 dato por hora, una frase</string>
+    <string name="intensidad_normal_descripcion">Hasta 2 por hora, dos frases</string>
+    <string name="intensidad_intenso_descripcion">Hasta 4 por hora, un párrafo</string>
     <string name="intensidad_descripcion_accesible">Intensidad %1$s</string>
 
     <!-- Acciones -->
@@ -89,13 +89,18 @@
     <string name="error_internet_titulo">Sin internet</string>
     <string name="error_internet_mensaje">Revisa la conexión del reloj y vuelve a intentar.</string>
     <string name="error_lugares_titulo">Nada cerca todavía</string>
-    <string name="error_lugares_mensaje">No hay lugares conocidos por aquí. Camina un poco.</string>
+    <string name="error_lugares_mensaje">No hay lugares emblemáticos por aquí. Camina un poco.</string>
     <string name="error_fuente_titulo">Lugares no disponibles</string>
     <string name="error_fuente_mensaje">No se pudo consultar qué hay cerca. Intenta de nuevo.</string>
     <string name="error_ia_titulo">No se pudo crear el dato</string>
     <string name="error_ia_mensaje">La IA no respondió. Intenta de nuevo en un momento.</string>
     <string name="error_guardado_titulo">No se pudo guardar</string>
     <string name="error_guardado_mensaje">El reloj no pudo guardar el cambio. Intenta de nuevo.</string>
+    <string name="en_curso_titulo">Ya viene un dato</string>
+    <string name="en_curso_mensaje">Hay otro dato en preparación; aparece en un momento.</string>
+    <string name="lectura_error_titulo">No se pudo leer</string>
+    <string name="historial_error_lectura">El historial guardado no se pudo abrir. Cierra y abre la app.</string>
+    <string name="dato_error_lectura">Este dato no se pudo abrir. Vuelve e inténtalo de nuevo.</string>
     <string name="error_voz_titulo">Voz no disponible</string>
     <string name="error_voz_mensaje">Instala una voz en español en los ajustes del reloj.</string>
 </resources>

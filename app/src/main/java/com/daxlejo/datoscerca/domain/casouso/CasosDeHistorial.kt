@@ -6,11 +6,11 @@ import com.daxlejo.datoscerca.domain.puerto.RepositorioHistorial
 import kotlinx.coroutines.flow.Flow
 
 class ObservarHistorial(private val repositorio: RepositorioHistorial) {
-    operator fun invoke(): Flow<List<EntradaHistorial>> = repositorio.observar()
+    operator fun invoke(): Flow<Resultado<List<EntradaHistorial>>> = repositorio.observar()
 }
 
 class ObservarEntrada(private val repositorio: RepositorioHistorial) {
-    operator fun invoke(id: Long): Flow<EntradaHistorial?> = repositorio.observarEntrada(id)
+    operator fun invoke(id: Long): Flow<Resultado<EntradaHistorial?>> = repositorio.observarEntrada(id)
 }
 
 class AlternarFavorito(private val repositorio: RepositorioHistorial) {

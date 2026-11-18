@@ -68,3 +68,7 @@ private fun DatoErrorIaPreview() = Muestra(DatoUiState.Problema(ErrorDato.ErrorI
 @PreviewsWear
 @Composable
 private fun DatoSinLugaresPreview() = Muestra(DatoUiState.Problema(ErrorDato.SinLugares))
+
+@PreviewsWear
+@Composable
+private fun DatoErrorLecturaPreview() = Muestra(DatoUiState.ErrorLectura(ErrorDato.Almacenamiento("disco")))

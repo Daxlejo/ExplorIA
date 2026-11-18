@@ -24,7 +24,9 @@ import com.daxlejo.datoscerca.domain.casouso.ObtenerDatoParaUbicacion
 import com.daxlejo.datoscerca.domain.motor.AvisadorDato
 import com.daxlejo.datoscerca.domain.motor.FabricaPoliticas
 import com.daxlejo.datoscerca.domain.motor.FabricaSelectores
+import com.daxlejo.datoscerca.domain.motor.FiltroRelevancia
 import com.daxlejo.datoscerca.domain.motor.FiltroRepeticion
+import com.daxlejo.datoscerca.domain.motor.GeneracionUnica
 import com.daxlejo.datoscerca.domain.motor.MotorAutomatico
 import com.daxlejo.datoscerca.domain.motor.ProducirDato
 import com.daxlejo.datoscerca.domain.puerto.FuenteLugares
@@ -63,8 +65,12 @@ class AppContainer(context: Context) {
     private val generadorDatos: GeneradorDatos = FakeGeneradorDatos(escenarioFake)
 
     // Motor de datos
-    private val fabricaPoliticas = FabricaPoliticas(reloj)
+    private val fabricaPoliticas = FabricaPoliticas()
     private val filtroRepeticion = FiltroRepeticion()
+    private val filtroRelevancia = FiltroRelevancia(radioLlegadaMetros = FiltroRelevancia.RADIO_LLEGADA_POR_DEFECTO)
+
+    // Compartida por el dato manual y el automático: nunca se preparan dos a la vez.
+    private val generacionUnica = GeneracionUnica()
     private val producirDato by lazy {
         ProducirDato(
             generador = generadorDatos,
@@ -89,8 +95,10 @@ class AppContainer(context: Context) {
             fuente = fuenteLugares,
             historial = repositorioHistorial,
             configuracion = repositorioConfiguracion,
-            filtro = filtroRepeticion,
+            filtroRepeticion = filtroRepeticion,
+            filtroRelevancia = filtroRelevancia,
             producir = producirDato,
+            generacion = generacionUnica,
             reloj = reloj,
         )
     }
@@ -100,8 +108,10 @@ class AppContainer(context: Context) {
             historial = repositorioHistorial,
             configuracion = repositorioConfiguracion,
             fabricaPoliticas = fabricaPoliticas,
-            filtro = filtroRepeticion,
+            filtroRepeticion = filtroRepeticion,
+            filtroRelevancia = filtroRelevancia,
             producir = producirDato,
+            generacion = generacionUnica,
             reloj = reloj,
         )
     }

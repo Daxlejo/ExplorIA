@@ -1,9 +1,20 @@
 package com.daxlejo.datoscerca.domain.motor
 
 import com.daxlejo.datoscerca.domain.modelo.Intensidad
-import com.daxlejo.datoscerca.domain.puerto.Reloj
 
-enum class MotivoOmision { INTERVALO_NO_CUMPLIDO, LUGAR_YA_MOSTRADO, NADA_CERCA }
+enum class MotivoOmision {
+    /** Ya salieron los datos automáticos que permite la intensidad en la última hora. */
+    LIMITE_POR_HORA,
+
+    /** Los lugares relevantes del radio ya se mostraron hace poco. */
+    LUGAR_YA_MOSTRADO,
+
+    /** No hay ningún lugar relevante dentro del radio de llegada. */
+    NADA_RELEVANTE_CERCA,
+
+    /** Ya se está generando otro dato; no se encadenan dos seguidos. */
+    GENERACION_EN_CURSO,
+}
 
 sealed interface Decision {
     data object Permitir : Decision
@@ -14,67 +25,71 @@ sealed interface Decision {
 data class FormatoDato(val instruccionLargo: String, val maxTokensSalida: Int)
 
 /**
- * Strategy: cada nivel de intensidad decide cuándo toca un dato automático y qué tan largo es.
- * [ultimoDatoMs] es el instante del último dato mostrado (null si no hay ninguno).
+ * Strategy: cada nivel de intensidad decide cuántos datos automáticos caben en una hora y qué tan largos son.
+ * La ventana es móvil: cuenta los datos automáticos del historial de los últimos [VENTANA_MS].
  */
 interface PoliticaIntensidad {
     val intensidad: Intensidad
     val formato: FormatoDato
-    fun evaluar(ultimoDatoMs: Long?, lugarEsNuevo: Boolean): Decision
+    fun evaluar(automaticosUltimaHora: Int): Decision
+
+    companion object {
+        const val VENTANA_MS = 60 * 60_000L
+    }
 }
 
-/** Suave: como mucho un dato cada ~10 minutos, de una frase. Si el lugar se repite, se busca otro. */
-class PoliticaSuave(private val reloj: Reloj) : PoliticaIntensidad {
+/** Base común: permite mientras no se llegue a [maxPorHora]. */
+abstract class PoliticaConLimitePorHora(private val maxPorHora: Int) : PoliticaIntensidad {
+    init {
+        require(maxPorHora > 0) { "El límite por hora debe ser positivo" }
+    }
+
+    override fun evaluar(automaticosUltimaHora: Int): Decision =
+        if (automaticosUltimaHora < maxPorHora) Decision.Permitir else Decision.Rechazar(MotivoOmision.LIMITE_POR_HORA)
+}
+
+/** Suave: como mucho un dato por hora, de una frase. */
+class PoliticaSuave : PoliticaConLimitePorHora(MAX_POR_HORA) {
     override val intensidad = Intensidad.SUAVE
     override val formato = FormatoDato("una sola frase corta", maxTokensSalida = 60)
 
-    override fun evaluar(ultimoDatoMs: Long?, lugarEsNuevo: Boolean): Decision =
-        reloj.decidirPorIntervalo(ultimoDatoMs, INTERVALO_MINIMO_MS)
-
     companion object {
-        const val INTERVALO_MINIMO_MS = 10 * 60_000L
+        const val MAX_POR_HORA = 1
     }
 }
 
-/** Normal: solo al llegar a un lugar nuevo y con ~3 minutos entre datos; dos frases. */
-class PoliticaNormal(private val reloj: Reloj) : PoliticaIntensidad {
+/** Normal: como mucho dos datos por hora, de dos frases. */
+class PoliticaNormal : PoliticaConLimitePorHora(MAX_POR_HORA) {
     override val intensidad = Intensidad.NORMAL
     override val formato = FormatoDato("exactamente dos frases", maxTokensSalida = 110)
 
-    override fun evaluar(ultimoDatoMs: Long?, lugarEsNuevo: Boolean): Decision =
-        if (lugarEsNuevo) {
-            reloj.decidirPorIntervalo(ultimoDatoMs, INTERVALO_MINIMO_MS)
-        } else {
-            Decision.Rechazar(MotivoOmision.LUGAR_YA_MOSTRADO)
-        }
-
     companion object {
-        const val INTERVALO_MINIMO_MS = 3 * 60_000L
+        const val MAX_POR_HORA = 2
     }
 }
 
-/** Intenso: cada lugar nuevo, sin espera; un párrafo corto. */
-class PoliticaIntenso : PoliticaIntensidad {
+/** Intenso: como mucho cuatro datos por hora, de un párrafo corto. */
+class PoliticaIntenso : PoliticaConLimitePorHora(MAX_POR_HORA) {
     override val intensidad = Intensidad.INTENSO
     override val formato = FormatoDato("un párrafo corto de tres o cuatro frases", maxTokensSalida = 220)
 
-    override fun evaluar(ultimoDatoMs: Long?, lugarEsNuevo: Boolean): Decision =
-        if (lugarEsNuevo) Decision.Permitir else Decision.Rechazar(MotivoOmision.LUGAR_YA_MOSTRADO)
-}
-
-class FabricaPoliticas(private val reloj: Reloj) {
-    fun para(intensidad: Intensidad): PoliticaIntensidad = when (intensidad) {
-        Intensidad.SUAVE -> PoliticaSuave(reloj)
-        Intensidad.NORMAL -> PoliticaNormal(reloj)
-        Intensidad.INTENSO -> PoliticaIntenso()
+    companion object {
+        const val MAX_POR_HORA = 4
     }
 }
 
-private fun Reloj.decidirPorIntervalo(ultimoDatoMs: Long?, intervaloMinimoMs: Long): Decision {
-    val transcurrido = ultimoDatoMs?.let { ahoraMs() - it }
-    return if (transcurrido == null || transcurrido >= intervaloMinimoMs) {
-        Decision.Permitir
-    } else {
-        Decision.Rechazar(MotivoOmision.INTERVALO_NO_CUMPLIDO)
+/** Decorator del modo demo: mantiene el largo del nivel, pero sin límite por hora. */
+class PoliticaDemo(private val base: PoliticaIntensidad) : PoliticaIntensidad by base {
+    override fun evaluar(automaticosUltimaHora: Int): Decision = Decision.Permitir
+}
+
+class FabricaPoliticas {
+    fun para(intensidad: Intensidad, modoDemo: Boolean = false): PoliticaIntensidad {
+        val base = when (intensidad) {
+            Intensidad.SUAVE -> PoliticaSuave()
+            Intensidad.NORMAL -> PoliticaNormal()
+            Intensidad.INTENSO -> PoliticaIntenso()
+        }
+        return if (modoDemo) PoliticaDemo(base) else base
     }
 }

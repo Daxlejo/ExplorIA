@@ -7,6 +7,7 @@ import com.daxlejo.datoscerca.domain.modelo.Configuracion
 import com.daxlejo.datoscerca.domain.modelo.Dato
 import com.daxlejo.datoscerca.domain.modelo.EntradaHistorial
 import com.daxlejo.datoscerca.domain.modelo.Lugar
+import com.daxlejo.datoscerca.domain.modelo.OrigenDato
 import com.daxlejo.datoscerca.domain.modelo.TipoDato
 import com.daxlejo.datoscerca.domain.puerto.GeneradorDatos
 import com.daxlejo.datoscerca.domain.puerto.Narrador
@@ -15,11 +16,9 @@ import com.daxlejo.datoscerca.domain.puerto.RepositorioHistorial
 import com.daxlejo.datoscerca.domain.puerto.SolicitudGeneracion
 import com.daxlejo.datoscerca.domain.puerto.Vibrador
 
+/** El radio del dato automático vive en [FiltroRelevancia.radioLlegadaMetros]. */
 object RadioBusqueda {
-    /** Dato automático: solo cuando la persona ya llegó al lugar. */
-    const val LLEGADA_METROS = 80
-
-    /** Dato pedido a mano: cualquier cosa que quede a pocos minutos caminando. */
+    /** Dato pedido a mano: cualquier lugar emblemático que quede a pocos minutos caminando. */
     const val CERCANIA_METROS = 500
 }
 
@@ -48,11 +47,12 @@ class ProducirDato(
         lugar: Lugar,
         configuracion: Configuracion,
         recientes: List<EntradaHistorial>,
+        origen: OrigenDato,
     ): Resultado<EntradaHistorial> {
         val tipo = elegirTipo(configuracion, recientes)
         val solicitud = solicitud(lugar, tipo, configuracion)
         return generador.generar(solicitud)
-            .encadenar { texto -> guardar(texto, solicitud) }
+            .encadenar { texto -> guardar(texto, solicitud, origen) }
             .also { if (it is Resultado.Exito) avisador.avisar(it.valor, configuracion) }
     }
 
@@ -66,9 +66,13 @@ class ProducirDato(
         return SolicitudGeneracion(lugar, tipo, configuracion.intensidad, prompt)
     }
 
-    private suspend fun guardar(texto: String, solicitud: SolicitudGeneracion): Resultado<EntradaHistorial> {
+    private suspend fun guardar(
+        texto: String,
+        solicitud: SolicitudGeneracion,
+        origen: OrigenDato,
+    ): Resultado<EntradaHistorial> {
         if (texto.isBlank()) return Resultado.Fallo(ErrorDato.ErrorIa("La IA respondió vacío"))
-        val dato = Dato(texto.trim(), solicitud.tipo, solicitud.intensidad, solicitud.lugar, reloj.ahoraMs())
+        val dato = Dato(texto.trim(), solicitud.tipo, solicitud.intensidad, solicitud.lugar, reloj.ahoraMs(), origen)
         return historial.guardar(dato)
     }
 }

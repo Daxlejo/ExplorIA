@@ -30,6 +30,8 @@ fun ErrorDato.presentacion(): PresentacionEstado = when (this) {
         R.string.pausa_mensaje,
         R.string.accion_reanudar,
     )
+    ErrorDato.GeneracionEnCurso ->
+        PresentacionEstado(R.drawable.ic_bombillo, R.string.en_curso_titulo, R.string.en_curso_mensaje)
     ErrorDato.VozNoDisponible ->
         PresentacionEstado(R.drawable.ic_volumen, R.string.error_voz_titulo, R.string.error_voz_mensaje)
     is ErrorDato.FuenteNoDisponible ->

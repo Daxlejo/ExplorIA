@@ -56,37 +56,29 @@ class FakeProveedorUbicacion(
     }
 }
 
-/** Lugares simulados: el más cercano de [DatosPasto] dentro del radio pedido. */
+/** Lugares simulados: los de [DatosPasto] dentro del radio pedido, del más cercano al más lejano. */
 class FakeFuenteLugares(
     private val escenario: StateFlow<EscenarioFake>,
     private val demoraMs: Long = 300,
 ) : FuenteLugares {
 
-    override suspend fun buscarCercano(
-        coordenada: Coordenada,
-        radioMetros: Int,
-        excluir: Set<String>,
-    ): Resultado<Lugar> {
+    override suspend fun buscarCercanos(coordenada: Coordenada, radioMetros: Int): Resultado<List<Lugar>> {
         delay(demoraMs)
         return when (escenario.value) {
             EscenarioFake.SIN_INTERNET -> Resultado.Fallo(ErrorDato.SinInternet)
-            EscenarioFake.SIN_LUGARES -> Resultado.Fallo(ErrorDato.SinLugares)
-            else -> masCercano(coordenada, radioMetros, excluir)
+            EscenarioFake.SIN_LUGARES -> Resultado.Exito(emptyList())
+            else -> Resultado.Exito(cercanos(coordenada, radioMetros))
         }
     }
 
-    private fun masCercano(coordenada: Coordenada, radioMetros: Int, excluir: Set<String>): Resultado<Lugar> {
-        val elegido = DatosPasto.lugares
-            .filter { it.id !in excluir }
-            .map { it to coordenada.distanciaMetrosA(it.coordenada) }
-            .filter { (_, distancia) -> distancia <= radioMetros }
-            .minByOrNull { (_, distancia) -> distancia }
-            ?: return Resultado.Fallo(ErrorDato.SinLugares)
-        val (muestra, distancia) = elegido
-        return Resultado.Exito(
-            Lugar(muestra.id, muestra.nombre, muestra.coordenada, distancia.roundToInt(), muestra.contexto, DatosPasto.FUENTE),
-        )
-    }
+    private fun cercanos(coordenada: Coordenada, radioMetros: Int): List<Lugar> =
+        DatosPasto.lugares
+            .map { it.aLugar(coordenada.distanciaMetrosA(it.coordenada).roundToInt()) }
+            .filter { it.distanciaMetros <= radioMetros }
+            .sortedBy(Lugar::distanciaMetros)
+
+    private fun LugarMuestra.aLugar(distanciaMetros: Int) =
+        Lugar(id, nombre, coordenada, distanciaMetros, contexto, DatosPasto.FUENTE, relevancia)
 }
 
 /** IA simulada: arma el dato con frases de muestra; más frases cuanto mayor es la intensidad. */

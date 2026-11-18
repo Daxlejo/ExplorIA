@@ -4,6 +4,7 @@ package com.daxlejo.datoscerca.domain.modelo
  * Sitio cercano sobre el que se puede contar un dato.
  * [id] es estable e incluye el prefijo de la fuente (por ejemplo "wikipedia-es:123").
  * [contexto] es el texto real del que la IA saca los hechos; llega vacío al leerlo del historial.
+ * [relevancia] la decide la fuente; el dominio la usa en [com.daxlejo.datoscerca.domain.motor.FiltroRelevancia].
  */
 data class Lugar(
     val id: String,
@@ -12,6 +13,7 @@ data class Lugar(
     val distanciaMetros: Int,
     val contexto: String,
     val fuente: String,
+    val relevancia: Relevancia,
 ) {
     init {
         require(id.isNotBlank()) { "El lugar necesita un id" }

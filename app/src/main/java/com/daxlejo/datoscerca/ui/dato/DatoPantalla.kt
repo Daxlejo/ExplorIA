@@ -90,6 +90,14 @@ fun DatoPantalla(estado: DatoUiState, acciones: AccionesDato, animarEntrada: Boo
             etiquetaAccion = stringResource(R.string.accion_volver),
             alAccionar = acciones.alCerrar,
         )
+        is DatoUiState.ErrorLectura -> PantallaEstado(
+            titulo = stringResource(R.string.lectura_error_titulo),
+            mensaje = stringResource(R.string.dato_error_lectura),
+            icono = R.drawable.ic_alerta,
+            tinte = MaterialTheme.colorScheme.error,
+            etiquetaAccion = stringResource(R.string.accion_volver),
+            alAccionar = acciones.alCerrar,
+        )
         is DatoUiState.Problema -> PantallaProblema(
             presentacion = estado.error.presentacion(),
             alAccionar = acciones.alPedirOtro,

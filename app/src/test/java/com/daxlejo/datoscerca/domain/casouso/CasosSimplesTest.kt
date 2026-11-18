@@ -9,6 +9,7 @@ import com.daxlejo.datoscerca.soporte.RepositorioConfiguracionEnMemoria
 import com.daxlejo.datoscerca.soporte.RepositorioHistorialEnMemoria
 import com.daxlejo.datoscerca.soporte.dato
 import com.daxlejo.datoscerca.soporte.lugar
+import com.daxlejo.datoscerca.soporte.valorExitoso
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -81,7 +82,7 @@ class CasosDeHistorialTest {
         guardar("plaza", ms = 1)
         guardar("catedral", ms = 2)
 
-        assertEquals(listOf("catedral", "plaza"), observarHistorial().first().map { it.dato.lugar.id })
+        assertEquals(listOf("catedral", "plaza"), observarHistorial().first().valorExitoso().map { it.dato.lugar.id })
     }
 
     @Test
@@ -89,9 +90,9 @@ class CasosDeHistorialTest {
         val entrada = guardar("plaza", ms = 1)
 
         alternarFavorito(entrada.id)
-        val marcado = observarEntrada(entrada.id).first()?.favorito
+        val marcado = observarEntrada(entrada.id).first().valorExitoso()?.favorito
         alternarFavorito(entrada.id)
-        val desmarcado = observarEntrada(entrada.id).first()?.favorito
+        val desmarcado = observarEntrada(entrada.id).first().valorExitoso()?.favorito
 
         assertEquals(true, marcado)
         assertEquals(false, desmarcado)
@@ -104,7 +105,7 @@ class CasosDeHistorialTest {
 
         alternarFavorito(plaza.id)
 
-        assertEquals(false, observarEntrada(catedral.id).first()?.favorito)
+        assertEquals(false, observarEntrada(catedral.id).first().valorExitoso()?.favorito)
     }
 
     @Test
@@ -115,8 +116,8 @@ class CasosDeHistorialTest {
         val resultado = borrar(plaza.id)
 
         assertEquals(Resultado.Exito(Unit), resultado)
-        assertNull(observarEntrada(plaza.id).first())
-        assertEquals(listOf(catedral.id), observarHistorial().first().map { it.id })
+        assertNull(observarEntrada(plaza.id).first().valorExitoso())
+        assertEquals(listOf(catedral.id), observarHistorial().first().valorExitoso().map { it.id })
     }
 
     @Test
@@ -125,7 +126,7 @@ class CasosDeHistorialTest {
 
         borrar(unica.id)
 
-        assertTrue(observarHistorial().first().isEmpty())
+        assertTrue(observarHistorial().first().valorExitoso().isEmpty())
     }
 
     @Test
@@ -135,5 +136,13 @@ class CasosDeHistorialTest {
 
         assertEquals(Resultado.Fallo(ErrorDato.Almacenamiento("disco")), alternarFavorito(entrada.id))
         assertEquals(Resultado.Fallo(ErrorDato.Almacenamiento("disco")), borrar(entrada.id))
+    }
+
+    @Test
+    fun `un error al leer llega como fallo en el flujo en lugar de una excepcion`() = runTest {
+        repositorio.falloLectura = ErrorDato.Almacenamiento("base dañada")
+
+        assertEquals(Resultado.Fallo(ErrorDato.Almacenamiento("base dañada")), observarHistorial().first())
+        assertEquals(Resultado.Fallo(ErrorDato.Almacenamiento("base dañada")), observarEntrada(1).first())
     }
 }

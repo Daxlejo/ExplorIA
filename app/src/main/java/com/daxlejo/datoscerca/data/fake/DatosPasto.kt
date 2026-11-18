@@ -1,16 +1,21 @@
 package com.daxlejo.datoscerca.data.fake
 
 import com.daxlejo.datoscerca.domain.modelo.Coordenada
+import com.daxlejo.datoscerca.domain.modelo.Relevancia
 import com.daxlejo.datoscerca.domain.modelo.TipoDato
 import kotlin.math.ceil
 
-/** Lugar de muestra: su contexto y tres frases por tipo, de la más esencial a la más detallada. */
+/**
+ * Lugar de muestra: su contexto y tres frases por tipo, de la más esencial a la más detallada.
+ * [relevancia] imita lo que diría una fuente real (artículo de Wikipedia, etiquetas OSM o nada).
+ */
 data class LugarMuestra(
     val id: String,
     val nombre: String,
     val coordenada: Coordenada,
     val contexto: String,
     val frases: Map<TipoDato, List<String>>,
+    val relevancia: Relevancia = Relevancia.ARTICULO_WIKIPEDIA,
 )
 
 /**
@@ -20,8 +25,19 @@ data class LugarMuestra(
 object DatosPasto {
     const val FUENTE = "muestra"
 
-    // Punto de partida a unos 200 m de la Plaza de Nariño, sin ningún lugar dentro del radio de llegada.
-    val inicio = Coordenada(1.21640, -77.27690)
+    // Punto de partida a unos 300 m de San Juan Bautista: ningún lugar relevante dentro del radio de llegada.
+    val inicio = Coordenada(1.21800, -77.27600)
+
+    // Lugar común (sin artículo ni etiquetas patrimoniales) junto al inicio: prueba el filtro de relevancia.
+    // La ruta pasa por aquí y no debe salir ningún dato.
+    private val tiendaEsquina = LugarMuestra(
+        id = "muestra:tienda-la-esquina",
+        nombre = "Tienda La Esquina",
+        coordenada = Coordenada(1.21830, -77.27570),
+        contexto = "Tienda de barrio con víveres y gaseosas.",
+        frases = emptyMap(),
+        relevancia = Relevancia.NINGUNA,
+    )
 
     private val plazaNarino = LugarMuestra(
         id = "muestra:plaza-narino",
@@ -144,6 +160,7 @@ object DatosPasto {
         id = "muestra:museo-taminango",
         nombre = "Museo Taminango",
         coordenada = Coordenada(1.21690, -77.28230),
+        relevancia = Relevancia.ETIQUETA_OSM_PATRIMONIAL,
         contexto = "El Museo Taminango de Artes y Tradiciones Populares de Nariño funciona en una casona " +
             "colonial de 1623, una de las más antiguas de Pasto, declarada monumento nacional. Muestra oficios " +
             "tradicionales de la región como el barniz de Pasto o mopa-mopa, una técnica que decora madera con " +
@@ -258,7 +275,7 @@ object DatosPasto {
     )
 
     val lugares: List<LugarMuestra> =
-        listOf(plazaNarino, sanJuanBautista, catedral, museoTaminango, museoDelOro, plazaDelCarnaval)
+        listOf(tiendaEsquina, plazaNarino, sanJuanBautista, catedral, museoTaminango, museoDelOro, plazaDelCarnaval)
 
     /** Caminata en bucle que pasa por todos los lugares, con un punto cada [pasoMetros]. */
     fun ruta(pasoMetros: Double = 40.0): List<Coordenada> {

@@ -9,6 +9,8 @@ import com.daxlejo.datoscerca.domain.modelo.EntradaHistorial
 import com.daxlejo.datoscerca.domain.modelo.EstadoUbicacion
 import com.daxlejo.datoscerca.domain.modelo.Intensidad
 import com.daxlejo.datoscerca.domain.modelo.Lugar
+import com.daxlejo.datoscerca.domain.modelo.OrigenDato
+import com.daxlejo.datoscerca.domain.modelo.Relevancia
 import com.daxlejo.datoscerca.domain.modelo.TipoDato
 import com.daxlejo.datoscerca.domain.puerto.FuenteLugares
 import com.daxlejo.datoscerca.domain.puerto.GeneradorDatos
@@ -20,7 +22,9 @@ import com.daxlejo.datoscerca.domain.puerto.RepositorioHistorial
 import com.daxlejo.datoscerca.domain.puerto.SolicitudGeneracion
 import com.daxlejo.datoscerca.domain.puerto.Vibrador
 import kotlin.math.roundToInt
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -34,13 +38,18 @@ fun lugar(
     nombre: String = "Plaza de Nariño",
     coordenada: Coordenada = PLAZA,
     contexto: String = "La plaza principal de Pasto.",
-) = Lugar(id, nombre, coordenada, distanciaMetros = 0, contexto = contexto, fuente = "prueba")
+    relevancia: Relevancia = Relevancia.ARTICULO_WIKIPEDIA,
+    distanciaMetros: Int = 0,
+) = Lugar(id, nombre, coordenada, distanciaMetros, contexto, fuente = "prueba", relevancia = relevancia)
 
 fun dato(
     lugar: Lugar = lugar(),
     generadoEnMs: Long = 0,
     tipo: TipoDato = TipoDato.INTERESANTE,
-) = Dato("Un dato de prueba.", tipo, Intensidad.NORMAL, lugar, generadoEnMs)
+    origen: OrigenDato = OrigenDato.AUTOMATICO,
+) = Dato("Un dato de prueba.", tipo, Intensidad.NORMAL, lugar, generadoEnMs, origen)
+
+fun <T> Resultado<T>.valorExitoso(): T = (this as Resultado.Exito).valor
 
 class RelojFalso(var ahora: Long = 0) : Reloj {
     override fun ahoraMs(): Long = ahora
@@ -54,15 +63,24 @@ class RepositorioHistorialEnMemoria : RepositorioHistorial {
     private var siguienteId = 1L
     var fallo: ErrorDato? = null
 
+    /** Simula una lectura de la base que falla: los flujos emiten Fallo en lugar de datos. */
+    var falloLectura: ErrorDato? = null
+
     val actuales: List<EntradaHistorial> get() = entradas.value
 
-    override fun observar(): Flow<List<EntradaHistorial>> = entradas
+    override fun observar(): Flow<Resultado<List<EntradaHistorial>>> =
+        falloLectura?.let { flowOf(Resultado.Fallo(it)) } ?: entradas.map { Resultado.Exito(it) }
 
-    override fun observarEntrada(id: Long): Flow<EntradaHistorial?> =
-        entradas.map { lista -> lista.firstOrNull { it.id == id } }
+    override fun observarEntrada(id: Long): Flow<Resultado<EntradaHistorial?>> =
+        falloLectura?.let { flowOf(Resultado.Fallo(it)) }
+            ?: entradas.map { lista -> Resultado.Exito(lista.firstOrNull { it.id == id }) }
 
     override suspend fun recientes(limite: Int): Resultado<List<EntradaHistorial>> =
         intentar { entradas.value.take(limite) }
+
+    override suspend fun contarAutomaticosDesde(desdeMs: Long): Resultado<Int> = intentar {
+        entradas.value.count { it.dato.origen == OrigenDato.AUTOMATICO && it.dato.generadoEnMs >= desdeMs }
+    }
 
     override suspend fun guardar(dato: Dato): Resultado<EntradaHistorial> = intentar {
         EntradaHistorial(siguienteId++, dato, favorito = false).also { nueva -> entradas.update { listOf(nueva) + it } }
@@ -97,30 +115,31 @@ class RepositorioConfiguracionEnMemoria(
     }
 }
 
-/** Devuelve el lugar más cercano dentro del radio, igual que una fuente real, y anota cada búsqueda. */
+/** Devuelve los lugares dentro del radio, del más cercano al más lejano, y anota el radio de cada búsqueda. */
 class FuenteLugaresFalsa(private val lugares: List<Lugar> = listOf(lugar())) : FuenteLugares {
     var fallo: ErrorDato? = null
-    val busquedas = mutableListOf<Busqueda>()
+    val busquedas = mutableListOf<Int>()
 
-    data class Busqueda(val radioMetros: Int, val excluir: Set<String>)
-
-    override suspend fun buscarCercano(coordenada: Coordenada, radioMetros: Int, excluir: Set<String>): Resultado<Lugar> {
-        busquedas += Busqueda(radioMetros, excluir)
+    override suspend fun buscarCercanos(coordenada: Coordenada, radioMetros: Int): Resultado<List<Lugar>> {
+        busquedas += radioMetros
         fallo?.let { return Resultado.Fallo(it) }
-        val cercano = lugares
-            .filter { it.id !in excluir }
-            .map { it.copy(distanciaMetros = coordenada.distanciaMetrosA(it.coordenada).roundToInt()) }
-            .filter { it.distanciaMetros <= radioMetros }
-            .minByOrNull { it.distanciaMetros }
-        return cercano?.let { Resultado.Exito(it) } ?: Resultado.Fallo(ErrorDato.SinLugares)
+        return Resultado.Exito(
+            lugares
+                .map { it.copy(distanciaMetros = coordenada.distanciaMetrosA(it.coordenada).roundToInt()) }
+                .filter { it.distanciaMetros <= radioMetros }
+                .sortedBy { it.distanciaMetros },
+        )
     }
 }
 
+/** Si [retener] no es null, cada generación espera a que se complete: sirve para probar la generación única. */
 class GeneradorFalso(var respuesta: Resultado<String> = Resultado.Exito("Dato generado.")) : GeneradorDatos {
     val solicitudes = mutableListOf<SolicitudGeneracion>()
+    var retener: CompletableDeferred<Unit>? = null
 
     override suspend fun generar(solicitud: SolicitudGeneracion): Resultado<String> {
         solicitudes += solicitud
+        retener?.await()
         return respuesta
     }
 }

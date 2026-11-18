@@ -6,12 +6,15 @@ import com.daxlejo.datoscerca.domain.modelo.Configuracion
 import com.daxlejo.datoscerca.domain.modelo.Coordenada
 import com.daxlejo.datoscerca.domain.modelo.EntradaHistorial
 import com.daxlejo.datoscerca.domain.modelo.Lugar
+import com.daxlejo.datoscerca.domain.modelo.OrigenDato
 import com.daxlejo.datoscerca.domain.motor.Decision
 import com.daxlejo.datoscerca.domain.motor.FabricaPoliticas
+import com.daxlejo.datoscerca.domain.motor.FiltroRelevancia
 import com.daxlejo.datoscerca.domain.motor.FiltroRepeticion
+import com.daxlejo.datoscerca.domain.motor.GeneracionUnica
 import com.daxlejo.datoscerca.domain.motor.MotivoOmision
+import com.daxlejo.datoscerca.domain.motor.PoliticaIntensidad
 import com.daxlejo.datoscerca.domain.motor.ProducirDato
-import com.daxlejo.datoscerca.domain.motor.RadioBusqueda
 import com.daxlejo.datoscerca.domain.puerto.FuenteLugares
 import com.daxlejo.datoscerca.domain.puerto.Reloj
 import com.daxlejo.datoscerca.domain.puerto.RepositorioConfiguracion
@@ -26,72 +29,66 @@ sealed interface Exploracion {
 }
 
 /**
- * Dato automático al llegar a una ubicación. Aplica pausa, anti-repetición y política de
- * intensidad antes de gastar una llamada a la IA.
+ * Dato automático al pasar cerca de un lugar relevante. Antes de gastar una llamada a la IA
+ * aplica, en este orden: pausa, generación única, límite por hora, relevancia y anti-repetición.
  */
 class ObtenerDatoParaUbicacion(
     private val fuente: FuenteLugares,
     private val historial: RepositorioHistorial,
     private val configuracion: RepositorioConfiguracion,
     private val fabricaPoliticas: FabricaPoliticas,
-    private val filtro: FiltroRepeticion,
+    private val filtroRepeticion: FiltroRepeticion,
+    private val filtroRelevancia: FiltroRelevancia,
     private val producir: ProducirDato,
+    private val generacion: GeneracionUnica,
     private val reloj: Reloj,
 ) {
     suspend operator fun invoke(coordenada: Coordenada): Exploracion {
         val actual = configuracion.observar().first()
         if (actual.pausa) return Exploracion.Fallo(ErrorDato.EnPausa)
-        return when (val recientes = historial.recientes(filtro.maxRecientes)) {
+        return generacion.siEstaLibre { explorar(coordenada, actual) }
+            ?: Exploracion.Omitido(MotivoOmision.GENERACION_EN_CURSO, lugarCercano = null)
+    }
+
+    private suspend fun explorar(coordenada: Coordenada, actual: Configuracion): Exploracion =
+        revisarLimitePorHora(actual) ?: when (val recientes = historial.recientes(filtroRepeticion.maxRecientes)) {
             is Resultado.Fallo -> Exploracion.Fallo(recientes.error)
-            is Resultado.Exito -> explorar(coordenada, actual, recientes.valor)
+            is Resultado.Exito -> buscarLugar(coordenada, actual, recientes.valor)
+        }
+
+    // Devuelve null si todavía cabe un dato automático en la última hora (o si es modo demo).
+    private suspend fun revisarLimitePorHora(actual: Configuracion): Exploracion? {
+        val politica = fabricaPoliticas.para(actual.intensidad, actual.modoDemo)
+        val desdeMs = reloj.ahoraMs() - PoliticaIntensidad.VENTANA_MS
+        return when (val cuenta = historial.contarAutomaticosDesde(desdeMs)) {
+            is Resultado.Fallo -> Exploracion.Fallo(cuenta.error)
+            is Resultado.Exito -> (politica.evaluar(cuenta.valor) as? Decision.Rechazar)
+                ?.let { Exploracion.Omitido(it.motivo, lugarCercano = null) }
         }
     }
 
-    private suspend fun explorar(
+    private suspend fun buscarLugar(
         coordenada: Coordenada,
         actual: Configuracion,
         recientes: List<EntradaHistorial>,
-    ): Exploracion = when (val cercano = fuente.buscarCercano(coordenada, RadioBusqueda.LLEGADA_METROS)) {
-        is Resultado.Fallo -> alNoEncontrar(cercano.error, MotivoOmision.NADA_CERCA, lugarCercano = null)
-        is Resultado.Exito -> evaluar(coordenada, cercano.valor, actual, recientes)
+    ): Exploracion = when (val cercanos = fuente.buscarCercanos(coordenada, filtroRelevancia.radioLlegadaMetros)) {
+        is Resultado.Fallo -> Exploracion.Fallo(cercanos.error)
+        is Resultado.Exito -> elegir(filtroRelevancia.alLlegar(cercanos.valor), actual, recientes)
     }
 
-    private suspend fun evaluar(
-        coordenada: Coordenada,
-        cercano: Lugar,
+    private suspend fun elegir(
+        candidatos: List<Lugar>,
         actual: Configuracion,
         recientes: List<EntradaHistorial>,
     ): Exploracion {
-        val excluir = filtro.idsAExcluir(recientes, reloj.ahoraMs())
-        val esNuevo = cercano.id !in excluir
-        val ultimoDatoMs = recientes.firstOrNull()?.dato?.generadoEnMs
-        val decision = fabricaPoliticas.para(actual.intensidad).evaluar(ultimoDatoMs, esNuevo)
-        if (decision is Decision.Rechazar) return Exploracion.Omitido(decision.motivo, cercano)
-        if (esNuevo) return producirCon(cercano, actual, recientes)
-        return conOtroLugar(coordenada, cercano, excluir, actual, recientes)
-    }
-
-    // La política permitió el dato pero el lugar más cercano ya se mostró: se prueba con el siguiente.
-    private suspend fun conOtroLugar(
-        coordenada: Coordenada,
-        cercano: Lugar,
-        excluir: Set<String>,
-        actual: Configuracion,
-        recientes: List<EntradaHistorial>,
-    ): Exploracion = when (val otro = fuente.buscarCercano(coordenada, RadioBusqueda.LLEGADA_METROS, excluir)) {
-        is Resultado.Fallo -> alNoEncontrar(otro.error, MotivoOmision.LUGAR_YA_MOSTRADO, cercano)
-        is Resultado.Exito -> producirCon(otro.valor, actual, recientes)
-    }
-
-    private fun alNoEncontrar(error: ErrorDato, motivo: MotivoOmision, lugarCercano: Lugar?): Exploracion =
-        if (error == ErrorDato.SinLugares) Exploracion.Omitido(motivo, lugarCercano) else Exploracion.Fallo(error)
-
-    private suspend fun producirCon(
-        lugar: Lugar,
-        actual: Configuracion,
-        recientes: List<EntradaHistorial>,
-    ): Exploracion = when (val resultado = producir(lugar, actual, recientes)) {
-        is Resultado.Exito -> Exploracion.NuevoDato(resultado.valor)
-        is Resultado.Fallo -> Exploracion.Fallo(resultado.error)
+        val masCercano = candidatos.firstOrNull()
+            ?: return Exploracion.Omitido(MotivoOmision.NADA_RELEVANTE_CERCA, lugarCercano = null)
+        val excluir = filtroRepeticion.idsAExcluir(recientes, reloj.ahoraMs())
+        val nuevo = candidatos.firstOrNull { it.id !in excluir }
+            ?: return Exploracion.Omitido(MotivoOmision.LUGAR_YA_MOSTRADO, masCercano)
+        return when (val resultado = producir(nuevo, actual, recientes, OrigenDato.AUTOMATICO)) {
+            is Resultado.Exito -> Exploracion.NuevoDato(resultado.valor)
+            is Resultado.Fallo -> Exploracion.Fallo(resultado.error)
+        }
     }
 }

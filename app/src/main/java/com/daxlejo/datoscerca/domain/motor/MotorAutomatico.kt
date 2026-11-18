@@ -36,7 +36,7 @@ sealed interface EstadoMotor {
 
 /**
  * Máquina de estados del dato automático: observa la ubicación y la pausa,
- * y pide un dato cada vez que la persona se desplaza lo suficiente.
+ * y evalúa la ubicación cada vez que la persona se desplaza lo suficiente.
  *
  * [nuevosDatos] no guarda datos atrasados: si nadie lo escucha (la persona está en otra pantalla),
  * el dato queda en el historial y no interrumpe lo que esté haciendo.
@@ -58,7 +58,7 @@ class MotorAutomatico(
 
     private var ultimaEvaluada: Coordenada? = null
 
-    // Si el último intento falló o cayó dentro del intervalo, se repite sin exigir desplazamiento.
+    // Si el último intento falló o chocó con el límite por hora, se repite sin exigir desplazamiento.
     private var reintentarDesdeMs: Long? = null
 
     /** Suspende mientras el motor trabaja; quien lo llama decide el ciclo de vida. */
@@ -110,9 +110,11 @@ class MotorAutomatico(
         reintentarDesdeMs = if (quedaPendiente(exploracion)) reloj.ahoraMs() + esperaReintentoMs else null
     }
 
+    // Al liberarse el cupo de la hora se reintenta sin exigir desplazamiento. Si había otro dato en
+    // camino no se reintenta: saldrían dos datos seguidos.
     private fun quedaPendiente(exploracion: Exploracion): Boolean = when (exploracion) {
         is Exploracion.NuevoDato -> false
-        is Exploracion.Omitido -> exploracion.motivo == MotivoOmision.INTERVALO_NO_CUMPLIDO
+        is Exploracion.Omitido -> exploracion.motivo == MotivoOmision.LIMITE_POR_HORA
         is Exploracion.Fallo -> true
     }
 

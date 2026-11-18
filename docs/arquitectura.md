@@ -37,7 +37,7 @@ flowchart TB
     subgraph DOMINIO["domain — Kotlin puro"]
         direction TB
         Casos["Casos de uso<br/>ObtenerDatoAhora · ObtenerDatoParaUbicacion<br/>Guardar/ObservarConfiguracion<br/>ObservarHistorial · ObservarEntrada<br/>AlternarFavorito · BorrarEntradaHistorial"]
-        Motor["Motor de datos<br/>MotorAutomatico · ProducirDato<br/>PoliticaIntensidad · SelectorTipoDato<br/>FiltroRepeticion · PromptBuilder"]
+        Motor["Motor de datos<br/>MotorAutomatico · ProducirDato<br/>PoliticaIntensidad · SelectorTipoDato<br/>FiltroRelevancia · FiltroRepeticion<br/>GeneracionUnica · PromptBuilder"]
         Puertos["Puertos<br/>ProveedorUbicacion · FuenteLugares · GeneradorDatos<br/>RepositorioHistorial · RepositorioConfiguracion<br/>Reloj · Vibrador · Narrador"]
         Modelos["Modelos y errores<br/>Lugar · Dato · Configuracion · ErrorDato · Resultado"]
         Casos --> Motor
@@ -80,10 +80,24 @@ classDiagram
         +int distanciaMetros
         +String contexto
         +String fuente
+        +Relevancia relevancia
+    }
+    class Relevancia {
+        <<enumeration>>
+        ARTICULO_WIKIPEDIA
+        ETIQUETA_OSM_PATRIMONIAL
+        NINGUNA
+        +boolean emblematico
     }
     class Dato {
         +String texto
         +long generadoEnMs
+        +OrigenDato origen
+    }
+    class OrigenDato {
+        <<enumeration>>
+        AUTOMATICO
+        MANUAL
     }
     class EntradaHistorial {
         +long id
@@ -117,7 +131,18 @@ classDiagram
         <<interface>>
         +Intensidad intensidad
         +FormatoDato formato
-        +evaluar(ultimoDatoMs, lugarEsNuevo) Decision
+        +evaluar(automaticosUltimaHora) Decision
+    }
+    class PoliticaDemo {
+        +evaluar(n) Decision
+    }
+    class FiltroRelevancia {
+        +int radioLlegadaMetros
+        +alLlegar(cercanos) List~Lugar~
+        +emblematicos(cercanos) List~Lugar~
+    }
+    class GeneracionUnica {
+        +siEstaLibre(accion) T
     }
     class SelectorTipoDato {
         <<interface>>
@@ -134,7 +159,7 @@ classDiagram
     }
     class FuenteLugares {
         <<interface>>
-        +buscarCercano(coordenada, radioMetros, excluir) Resultado~Lugar~
+        +buscarCercanos(coordenada, radioMetros) Resultado
     }
     class GeneradorDatos {
         <<interface>>
@@ -147,7 +172,8 @@ classDiagram
     }
     class RepositorioHistorial {
         <<interface>>
-        +observar() Flow
+        +observar() Flow~Resultado~
+        +contarAutomaticosDesde(desdeMs) Resultado
         +guardar(dato) Resultado~EntradaHistorial~
         +alternarFavorito(id) Resultado
         +borrar(id) Resultado
@@ -159,7 +185,9 @@ classDiagram
     }
 
     Lugar --> Coordenada
+    Lugar --> Relevancia
     Dato --> Lugar
+    Dato --> OrigenDato
     Dato --> TipoDato
     Dato --> Intensidad
     EntradaHistorial --> Dato
@@ -168,6 +196,8 @@ classDiagram
     PoliticaIntensidad <|.. PoliticaSuave
     PoliticaIntensidad <|.. PoliticaNormal
     PoliticaIntensidad <|.. PoliticaIntenso
+    PoliticaIntensidad <|.. PoliticaDemo
+    PoliticaDemo o-- PoliticaIntensidad : decora
     SelectorTipoDato <|.. SelectorEnOrden
     SelectorTipoDato <|.. SelectorAleatorio
     ProducirDato --> GeneradorDatos
@@ -177,9 +207,13 @@ classDiagram
     ObtenerDatoParaUbicacion --> FuenteLugares
     ObtenerDatoParaUbicacion --> PoliticaIntensidad
     ObtenerDatoParaUbicacion --> FiltroRepeticion
+    ObtenerDatoParaUbicacion --> FiltroRelevancia
+    ObtenerDatoParaUbicacion --> GeneracionUnica
     ObtenerDatoParaUbicacion --> ProducirDato
     ObtenerDatoAhora --> ProveedorUbicacion
     ObtenerDatoAhora --> FuenteLugares
+    ObtenerDatoAhora --> FiltroRelevancia
+    ObtenerDatoAhora --> GeneracionUnica
     ObtenerDatoAhora --> ProducirDato
     MotorAutomatico --> ProveedorUbicacion
     MotorAutomatico --> RepositorioConfiguracion
@@ -188,11 +222,13 @@ classDiagram
 
 ### Errores
 
-No se lanzan excepciones para fallos esperados. Todo puerto devuelve `Resultado<T>` (`Exito` o `Fallo(ErrorDato)`), y `ErrorDato` es una jerarquía sellada: `SinPermiso` y `SinGps` (que son `ErrorUbicacion`), `SinInternet`, `SinLugares`, `FuenteNoDisponible`, `ErrorIa`, `EnPausa`, `VozNoDisponible` y `Almacenamiento`. La interfaz tiene un estado diseñado para cada uno (`ui/util/Textos.kt`).
+No se lanzan excepciones para fallos esperados. Todo puerto devuelve `Resultado<T>` (`Exito` o `Fallo(ErrorDato)`), y `ErrorDato` es una jerarquía sellada: `SinPermiso` y `SinGps` (que son `ErrorUbicacion`), `SinInternet`, `SinLugares`, `FuenteNoDisponible`, `ErrorIa`, `EnPausa`, `VozNoDisponible`, `GeneracionEnCurso` y `Almacenamiento`. La interfaz tiene un estado diseñado para cada uno (`ui/util/Textos.kt`).
+
+Los flujos del historial (`observar`, `observarEntrada`) también emiten `Resultado`: si Room falla al leer, `RepositorioHistorialRoom` captura la `SQLiteException` y emite `Fallo(Almacenamiento)`, que Historial y Dato muestran como pantalla de error en lugar de cerrar la app.
 
 Omitir un dato automático no es un error: `ObtenerDatoParaUbicacion` devuelve `Exploracion`, que distingue `NuevoDato`, `Omitido(motivo)` y `Fallo(error)`.
 
-## 4. Secuencia: la persona llega a un lugar
+## 4. Secuencia: la persona pasa cerca de un lugar relevante
 
 ```mermaid
 sequenceDiagram
@@ -200,8 +236,9 @@ sequenceDiagram
     participant U as ProveedorUbicacion
     participant M as MotorAutomatico
     participant C as ObtenerDatoParaUbicacion
-    participant F as FuenteLugares
+    participant G as GeneracionUnica
     participant P as PoliticaIntensidad
+    participant F as FuenteLugares
     participant D as ProducirDato
     participant IA as GeneradorDatos
     participant H as RepositorioHistorial
@@ -211,18 +248,23 @@ sequenceDiagram
     U-->>M: Disponible(coordenada)
     M->>M: ¿se movió 25 m o toca reintentar?
     M->>C: invoke(coordenada)
-    C->>H: recientes()
-    C->>F: buscarCercano(coordenada, 80 m)
-    F-->>C: Lugar
-    C->>C: FiltroRepeticion: ¿lugar nuevo?
-    C->>P: evaluar(últimoDato, lugarEsNuevo)
-    alt Rechazar
-        P-->>C: Rechazar(motivo)
+    C->>G: siEstaLibre
+    Note over G: si ya hay otro dato en camino, Omitido(GENERACION_EN_CURSO)
+    C->>H: contarAutomaticosDesde(ahora menos 1 h)
+    C->>P: evaluar(automáticos de la última hora)
+    alt Rechazar (el modo demo nunca rechaza)
+        P-->>C: Rechazar(LIMITE_POR_HORA)
         C-->>M: Omitido(motivo)
-        Note over M: sigue en Explorando, sin gastar IA
+        Note over M: sin consultar lugares ni gastar IA
     else Permitir
         P-->>C: Permitir
-        C->>D: invoke(lugar, configuración, recientes)
+        C->>H: recientes()
+        C->>F: buscarCercanos(coordenada, 200 m)
+        F-->>C: lista de lugares
+        C->>C: FiltroRelevancia: solo emblemáticos dentro del radio
+        C->>C: FiltroRepeticion: el más cercano no mostrado
+        Note over C: si no queda ninguno, Omitido(NADA_RELEVANTE_CERCA o LUGAR_YA_MOSTRADO)
+        C->>D: invoke(lugar, configuración, recientes, AUTOMATICO)
         D->>D: SelectorTipoDato + PromptBuilder
         D->>IA: generar(solicitud)
         IA-->>D: texto
@@ -237,7 +279,7 @@ sequenceDiagram
     end
 ```
 
-El dato manual ("Dato ahora") sigue el mismo tramo final (`ProducirDato`), pero lo inicia `ObtenerDatoAhora`: no espera el intervalo de la intensidad, busca en un radio mayor (500 m) y, si todo lo cercano ya se mostró, repite el lugar más cercano.
+El dato manual ("Dato ahora") sigue el mismo tramo final (`ProducirDato`), pero lo inicia `ObtenerDatoAhora`: ignora el límite por hora y no cuenta para él (se guarda con origen `MANUAL`), busca en un radio mayor (500 m), solo acepta lugares emblemáticos y, si todos ya se mostraron, repite el más cercano. Comparte la misma `GeneracionUnica` que el automático: si ya viene un dato en camino responde `Fallo(GeneracionEnCurso)` y la interfaz espera ese dato en lugar de pedir otro.
 
 ## 5. Estados del motor de datos
 
@@ -249,7 +291,8 @@ stateDiagram-v2
     Iniciando --> EnPausa: pausa activada
 
     Explorando --> Evaluando: se movió ≥ 25 m o venció la espera de reintento
-    Evaluando --> Explorando: Omitido (nada cerca, lugar repetido, intervalo)
+    Evaluando --> Explorando: Omitido (nada relevante cerca, lugar repetido, otro dato en camino)
+    Evaluando --> Explorando: Omitido por límite por hora (se reintenta en 30 s aunque no se mueva)
     Evaluando --> Explorando: Fallo (queda como aviso y se reintenta en 30 s)
     Evaluando --> DatoNuevo: Permitir + IA + historial
     DatoNuevo --> Explorando: publica en nuevosDatos
@@ -265,27 +308,34 @@ stateDiagram-v2
 
 ### Reglas de intensidad
 
-| Nivel | Cuándo permite un dato automático | Largo | Tope de tokens |
-|---|---|---|---|
-| Suave | Han pasado ≥ 10 min desde el último dato. Si el lugar más cercano ya se mostró, usa el siguiente | 1 frase | 60 |
-| Normal | El lugar es nuevo y han pasado ≥ 3 min | 2 frases | 110 |
-| Intenso | El lugar es nuevo | Párrafo corto | 220 |
+Un dato automático solo sale al pasar cerca de un lugar **relevante** (`FiltroRelevancia`): con artículo de Wikipedia o etiquetas OSM `tourism`/`historic` (`Lugar.relevancia`, que llena la fuente) y a no más de `radioLlegadaMetros` (configurable entre 150 y 250 m; 200 m por defecto en `AppContainer`). Además debe caber en el límite por hora del nivel:
 
-"Lugar nuevo" significa que no aparece en el historial de los últimos 30 minutos (`FiltroRepeticion`).
+| Nivel | Máximo de datos automáticos | Largo | Tope de tokens |
+|---|---|---|---|
+| Suave | 1 por hora | 1 frase | 60 |
+| Normal | 2 por hora | 2 frases | 110 |
+| Intenso | 4 por hora | Párrafo corto | 220 |
+
+- La hora es una **ventana móvil**: se cuentan en el historial los datos con origen `AUTOMATICO` de los últimos 60 minutos (`RepositorioHistorial.contarAutomaticosDesde`). No hay un intervalo fijo entre datos: dos pueden salir seguidos si el cupo lo permite.
+- El **modo demo** (`Configuracion.modoDemo`) envuelve la política en `PoliticaDemo` (Decorator): conserva el largo del nivel y nunca rechaza por el límite.
+- **"Dato ahora"** nunca consulta el límite ni lo gasta.
+- "Lugar nuevo" significa que no aparece en el historial de los últimos 30 minutos (`FiltroRepeticion`); si el relevante más cercano ya se mostró, se usa el siguiente relevante del radio.
 
 ## 6. Patrones de diseño y dónde viven
 
 | Patrón | Dónde | Para qué |
 |---|---|---|
 | **Repository** | `domain/puerto/RepositorioHistorial`, `RepositorioConfiguracion` → `data/historial/RepositorioHistorialRoom`, `data/configuracion/RepositorioConfiguracionDataStore` | El dominio no sabe si los datos están en Room o en DataStore |
-| **Strategy** | `domain/motor/PoliticaIntensidad` (`PoliticaSuave`, `PoliticaNormal`, `PoliticaIntenso`) | Cada nivel decide cuándo toca un dato y qué tan largo es |
+| **Strategy** | `domain/motor/PoliticaIntensidad` (`PoliticaSuave`, `PoliticaNormal`, `PoliticaIntenso`) | Cada nivel decide cuántos datos automáticos caben por hora y qué tan largos son |
+| **Decorator** | `domain/motor/PoliticaDemo` | El modo demo quita el límite por hora sin tocar las políticas |
 | **Strategy** | `domain/motor/SelectorTipoDato` (`SelectorEnOrden`, `SelectorAleatorio`) | Selección fija o al azar entre los tipos marcados |
 | **Factory** | `FabricaPoliticas`, `FabricaSelectores`, `di/FabricaViewModels` | Elegir la estrategia según la configuración y construir ViewModels |
 | **Builder** | `domain/motor/PromptBuilder` | Armar el prompt paso a paso: lugar, tipo y formato |
 | **Observer** | `Flow`/`StateFlow`/`SharedFlow`: configuración, historial, ubicación, `MotorAutomatico.estado` y `nuevosDatos`, `uiState` de cada ViewModel | La interfaz reacciona a los cambios sin consultar |
 | **State** | `EstadoMotor` + `MotorAutomatico`; `UiState` sellados de cada pantalla | Estados explícitos; los imposibles no se pueden representar |
 | **Adapter** | `data/plataforma/RelojSistema`, `VibradorAndroid`, `NarradorTts`; `data/historial/EntradaMapper` | Traducir APIs de Android y filas de Room a los puertos y modelos del dominio |
-| **Chain of Responsibility** | `domain/puerto/FuenteLugares` (contrato preparado) | En la Sesión 2 una `CadenaFuentesLugares` encadenará Wikipedia → Nominatim → búsqueda web → región. `Fallo(SinLugares)` significa "pasa a la siguiente" |
+| **Chain of Responsibility** | `domain/puerto/FuenteLugares` (contrato preparado) | En la Sesión 2 una `CadenaFuentesLugares` encadenará Wikipedia → Nominatim → búsqueda web → región. Una lista vacía significa "pasa a la siguiente"; la relevancia de cada lugar la marca su fuente |
+| **Exclusión mutua** | `domain/motor/GeneracionUnica` (un `Mutex` con `tryLock`) | El dato manual y el automático nunca se generan a la vez ni uno detrás del otro |
 | **Inyección de dependencias manual** | `di/AppContainer` | Un solo punto de ensamblaje; cambiar fakes por reales son tres líneas |
 | **MVVM + UDF** | `ui/*/…ViewModel` + `…Pantalla` | Eventos suben, estado inmutable baja; los composables no deciden nada |
 
@@ -309,7 +359,8 @@ private val generadorDatos: GeneradorDatos = FakeGeneradorDatos(escenarioFake)  
 
 Lo que ya quedó preparado en el dominio:
 
-- `FuenteLugares.buscarCercano(coordenada, radioMetros, excluir)` permite componer una cadena y elegir "el más cercano no mostrado".
+- `FuenteLugares.buscarCercanos(coordenada, radioMetros)` devuelve todos los lugares del radio con su `Relevancia`; el dominio elige con `FiltroRelevancia` y `FiltroRepeticion`. Wikipedia marcará `ARTICULO_WIKIPEDIA` y Nominatim `ETIQUETA_OSM_PATRIMONIAL` o `NINGUNA` según sus etiquetas.
+- Falta el último recurso "dato del municipio" para "Dato ahora" cuando no hay ningún lugar emblemático: hoy responde `SinLugares`.
 - `SolicitudGeneracion.claveCache` (lugar + tipo + intensidad) para un decorador de caché.
 - `Prompt.maxTokensSalida` y el recorte de contexto a 1200 caracteres en `PromptBuilder`.
 - `ErrorDato.SinInternet`, `FuenteNoDisponible` y `ErrorIa` para mapear timeouts y respuestas 5xx.
@@ -320,5 +371,7 @@ Lo que ya quedó preparado en el dominio:
 
 - **El dato manual puede repetir un lugar.** Si todo lo cercano ya se mostró, `ObtenerDatoAhora` repite el más cercano en lugar de dejar a la persona sin respuesta.
 - **Un dato automático no interrumpe otra pantalla.** Si la persona está en Historial o Configuración, el dato vibra, se guarda y queda en el historial; solo se abre solo cuando está en Inicio.
-- **Dos radios de búsqueda** (`RadioBusqueda`): 80 m para "llegaste" (automático) y 500 m para "qué hay cerca" (manual).
+- **Dos radios de búsqueda**: `FiltroRelevancia.radioLlegadaMetros` (200 m, entre 150 y 250) para el automático y `RadioBusqueda.CERCANIA_METROS` (500 m) para "Dato ahora".
+- **Borrar un dato automático libera su cupo.** El límite se calcula sobre el historial guardado.
+- **Historial v2.** La base pasó a la versión 2 con `MIGRACION_1_2`, que agrega `lugar_relevancia` y `origen`. Lo guardado antes queda como `MANUAL`, así que no gasta cupo.
 - **`Lugar.contexto` no se guarda en el historial.** Solo sirve para generar; al leer una entrada llega vacío.

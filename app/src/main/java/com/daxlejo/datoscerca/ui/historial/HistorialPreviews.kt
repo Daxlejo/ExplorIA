@@ -1,6 +1,7 @@
 package com.daxlejo.datoscerca.ui.historial
 
 import androidx.compose.runtime.Composable
+import com.daxlejo.datoscerca.domain.error.ErrorDato
 import com.daxlejo.datoscerca.domain.modelo.TipoDato
 import com.daxlejo.datoscerca.ui.util.MarcoPreview
 import com.daxlejo.datoscerca.ui.util.PreviewsWear
@@ -62,3 +63,7 @@ private fun HistorialVacioPreview() = Muestra(HistorialUiState.Vacio)
 @PreviewsWear
 @Composable
 private fun HistorialCargandoPreview() = Muestra(HistorialUiState.Cargando)
+
+@PreviewsWear
+@Composable
+private fun HistorialErrorPreview() = Muestra(HistorialUiState.Error(ErrorDato.Almacenamiento("disco")))

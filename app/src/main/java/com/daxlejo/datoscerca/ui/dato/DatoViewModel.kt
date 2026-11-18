@@ -31,6 +31,9 @@ sealed interface DatoUiState {
     data object Cargando : DatoUiState
     data object NoDisponible : DatoUiState
 
+    /** No se pudo leer el dato guardado; solo queda volver. */
+    data class ErrorLectura(val error: ErrorDato) : DatoUiState
+
     /** No se pudo traer otro dato; el anterior sigue guardado y se puede volver a él. */
     data class Problema(val error: ErrorDato) : DatoUiState
 
@@ -103,9 +106,9 @@ class DatoViewModel(
         }
     }
 
-    // La pausa no es un error de pantalla completa: basta con avisar bajo el dato actual.
+    // La pausa y un dato ya en camino no son errores de pantalla completa: basta con avisar bajo el dato actual.
     private fun alFallarOtro(error: ErrorDato) = interaccion.update {
-        if (error == ErrorDato.EnPausa) {
+        if (error == ErrorDato.EnPausa || error == ErrorDato.GeneracionEnCurso) {
             it.copy(accion = AccionDato.NINGUNA, aviso = error)
         } else {
             it.copy(accion = AccionDato.NINGUNA, problema = error)
@@ -146,7 +149,12 @@ class DatoViewModel(
         return libre
     }
 
-    private fun reducir(entrada: EntradaHistorial?, actual: Interaccion): DatoUiState = when {
+    private fun reducir(lectura: Resultado<EntradaHistorial?>, actual: Interaccion): DatoUiState = when (lectura) {
+        is Resultado.Fallo -> DatoUiState.ErrorLectura(lectura.error)
+        is Resultado.Exito -> conEntrada(lectura.valor, actual)
+    }
+
+    private fun conEntrada(entrada: EntradaHistorial?, actual: Interaccion): DatoUiState = when {
         actual.accion == AccionDato.BORRANDO -> DatoUiState.Cargando
         actual.problema != null -> DatoUiState.Problema(actual.problema)
         entrada == null -> DatoUiState.NoDisponible

@@ -3,6 +3,8 @@ package com.daxlejo.datoscerca.ui.historial
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.daxlejo.datoscerca.domain.casouso.ObservarHistorial
+import com.daxlejo.datoscerca.domain.error.ErrorDato
+import com.daxlejo.datoscerca.domain.error.Resultado
 import com.daxlejo.datoscerca.domain.modelo.EntradaHistorial
 import com.daxlejo.datoscerca.domain.puerto.Reloj
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +19,9 @@ sealed interface HistorialUiState {
 
     /** No se ha guardado ningún dato todavía. */
     data object Vacio : HistorialUiState
+
+    /** No se pudo leer el historial guardado. */
+    data class Error(val error: ErrorDato) : HistorialUiState
 
     /** [grupos] puede quedar vacío si se filtran favoritos y no hay ninguno. */
     data class Lista(val soloFavoritos: Boolean, val grupos: List<GrupoDia>) : HistorialUiState
@@ -36,7 +41,13 @@ class HistorialViewModel(
 
     fun alCambiarSoloFavoritos(activo: Boolean) = soloFavoritos.update { activo }
 
-    private fun reducir(entradas: List<EntradaHistorial>, filtrar: Boolean): HistorialUiState {
+    private fun reducir(lectura: Resultado<List<EntradaHistorial>>, filtrar: Boolean): HistorialUiState =
+        when (lectura) {
+            is Resultado.Fallo -> HistorialUiState.Error(lectura.error)
+            is Resultado.Exito -> conEntradas(lectura.valor, filtrar)
+        }
+
+    private fun conEntradas(entradas: List<EntradaHistorial>, filtrar: Boolean): HistorialUiState {
         if (entradas.isEmpty()) return HistorialUiState.Vacio
         val visibles = if (filtrar) entradas.filter(EntradaHistorial::favorito) else entradas
         return HistorialUiState.Lista(filtrar, agrupador.agrupar(visibles, reloj.ahoraMs()))

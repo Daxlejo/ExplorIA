@@ -44,6 +44,12 @@ fun HistorialPantalla(
             icono = R.drawable.ic_bombillo,
             tinte = MaterialTheme.colorScheme.tertiary,
         )
+        is HistorialUiState.Error -> PantallaEstado(
+            titulo = stringResource(R.string.lectura_error_titulo),
+            mensaje = stringResource(R.string.historial_error_lectura),
+            icono = R.drawable.ic_alerta,
+            tinte = MaterialTheme.colorScheme.error,
+        )
         is HistorialUiState.Lista -> ListaHistorial(estado, alCambiarSoloFavoritos, alAbrirDato)
     }
 }
