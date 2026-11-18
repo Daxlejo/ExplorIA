@@ -35,3 +35,24 @@ Funciona **en cualquier lugar del mundo**, no solo en Pasto, y permite elegir el
 
 ---
 
+## 1. Qué hace ExplorIA
+
+- **Ubicación en tiempo real.** Usa `FusedLocationProviderClient` solo en primer plano, con el flujo de permisos de Android y estados diseñados para *sin permiso* y *sin GPS*.
+- **Solo lugares emblemáticos.** Un lugar califica si tiene artículo en Wikipedia o etiquetas patrimoniales/turísticas en OpenStreetMap, y si está a menos de 150–250 m. Una calle, una casa o una tienda nunca disparan un dato automático.
+- **Datos generados con IA, sin inventar.** El modelo recibe únicamente el texto real del lugar como contexto y responde en español, en texto plano.
+- **Tipo de dato configurable** (selección múltiple, mínimo uno): *Interesante, Histórico, Cómico, Curioso, Gastronómico*, con un interruptor **Aleatorio**.
+- **Tres intensidades** con ventana móvil de 60 minutos:
+
+  | Nivel | Datos automáticos | Largo | Tope de tokens de salida |
+  |---|---|---|---|
+  | Suave | máx. 1 por hora | 1 frase | 60 |
+  | Normal | máx. 2 por hora | 2 frases | 110 |
+  | Intenso | máx. 4 por hora | párrafo corto | 220 |
+
+- **Botón "Dato ahora".** Ignora los topes por hora y siempre responde: si no hay ningún hito cerca, cuenta algo del municipio.
+- **Historial persistente (Room).** Agrupado por día (*Hoy, Ayer, fecha*), con favoritos, filtro *Solo favoritos* y borrado. También evita repetir lugares mostrados hace poco.
+- **Voz y vibración.** Lectura en voz alta con TextToSpeech en español y vibración con patrón propio al llegar un dato.
+- **Caché y Modo demo.** Un dato ya generado nunca se vuelve a pedir a OpenAI, y el Modo demo permite recorrer la ruta de Pasto sin internet y sin tope por hora.
+
+---
+
