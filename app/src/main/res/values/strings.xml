@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
-    <string name="app_nombre">Datos Cerca</string>
+    <string name="app_nombre">ExplorIA</string>
 
     <!-- Tipos de dato -->
     <string name="tipo_interesante">Interesante</string>
