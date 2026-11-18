@@ -160,3 +160,53 @@ Definido en `ui/theme` y reutilizado por todos los componentes:
 
 ---
 
+## 8. Configuración e instalación
+
+**Requisitos:** Android Studio reciente, JDK 17+, el emulador *Wear OS Large Round* (API 37) y, para datos reales, una API key de OpenAI.
+
+1. Clona el repositorio y copia [`local.properties.example`](local.properties.example) como `local.properties` (Git lo ignora):
+
+   ```properties
+   sdk.dir=C\:\\Users\\TU_USUARIO\\AppData\\Local\\Android\\Sdk
+   OPENAI_API_KEY=tu_clave
+   OPENAI_MODEL=gpt-6-luna
+   OPENAI_WEB_SEARCH=false
+   ```
+
+   `BuildConfig` inyecta estas propiedades al compilar. **Nunca pongas claves en el código ni las subas a Git.** `OPENAI_WEB_SEARCH` se deja en `false` para ahorrar presupuesto.
+
+2. Compila, prueba y revisa lint:
+
+   ```bash
+   ./gradlew assembleDebug testDebugUnitTest lint
+   ```
+
+3. Con el emulador abierto (`adb devices` debe mostrar `emulator-5554`), instala y abre la app:
+
+   ```bash
+   adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
+   adb -s emulator-5554 shell am start -n com.daxlejo.datoscerca/.ui.MainActivity
+   ```
+
+4. Concede el permiso de ubicación (*While using app*). La pantalla pasa a **Explorando**.
+
+---
+
+## 9. Pruebas
+
+`./gradlew testDebugUnitTest` ejecuta **122 pruebas unitarias** (0 fallidas); `./gradlew lint` termina sin issues.
+
+| Qué se prueba | Clases de prueba | Tests |
+|---|---|---|
+| Casos de uso (`ObtenerDatoParaUbicacion`, `ObtenerDatoAhora`, configuración, historial) | `ObtenerDatoTest`, `CasosSimplesTest` | 43 |
+| Motor automático y llegada a lugares | `MotorAutomaticoTest` | 12 |
+| Selección de tipo y filtros de relevancia / repetición | `SelectorYFiltroTest`, `FiltroRelevanciaYGeneracionTest` | 26 |
+| Políticas de intensidad y `PromptBuilder` | `PoliticaIntensidadTest`, `PromptBuilderTest` | 14 |
+| Cadena de fuentes, Wikipedia/Nominatim y limitador de 1 req/s | `CadenaFuentesLugaresTest`, `FuentesRealesYLimitadorTest` | 14 |
+| Generador de IA, caché y mapeo de errores | `GeneradorDatosYCacheTest` | 7 |
+| Historial (agrupación por día y ViewModel) | `AgrupadorHistorialTest`, `HistorialViewModelTest` | 6 |
+
+El dominio se prueba con dobles de prueba (`Dobles.kt`), sin emulador ni red.
+
+---
+
