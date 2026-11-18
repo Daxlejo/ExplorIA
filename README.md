@@ -72,3 +72,24 @@ Todas las capturas (permisos, estados de error, fuente grande `1.24x` y pantalla
 
 ---
 
+## 3. Tecnologías utilizadas
+
+| Área | Tecnología | Versión |
+|---|---|---|
+| Lenguaje | Kotlin | 2.4.21 |
+| Build | Android Gradle Plugin / Gradle | 9.5.1 / 9.9.1 |
+| UI | Jetpack Compose (BOM) | 2026.09.00 |
+| UI para reloj | Compose for Wear OS Material 3 | 1.7.1 |
+| Asincronía | Kotlin Coroutines / Flow | 1.11.0 |
+| Base de datos | Room (historial) | 2.8.5 |
+| Preferencias | DataStore Preferences (configuración) | 1.3.0 |
+| Ciclo de vida | AndroidX Lifecycle | 2.11.0 |
+| Red | OkHttp | 5.5.1 |
+| JSON | kotlinx.serialization | 1.13.0 |
+| Ubicación | Google Play Services Location (Fused) | 21.4.0 |
+| Pruebas | JUnit 4 + coroutines-test | 4.13.2 |
+
+**Servicios externos:** Wikipedia (API GeoSearch y resúmenes), OpenStreetMap Nominatim y OpenAI Responses API. Las versiones viven en [`gradle/libs.versions.toml`](gradle/libs.versions.toml). Configuración mínima: `minSdk 30`, `compileSdk 37`.
+
+---
+
