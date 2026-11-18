@@ -724,7 +724,7 @@ code {
 
   .nav a {
     display: inline-block;
-    padding: 6px 0;
+    padding: 12px 0;
   }
 
   .hero__reloj {
@@ -840,5 +840,52 @@ code {
   .costos {
     grid-template-columns: 1fr 1.4fr;
     align-items: start;
+  }
+}
+
+/* ---------- Accesibilidad ---------- */
+
+/* Foco visible en ámbar para teclado (contraste 13.5:1 sobre negro) */
+:focus-visible {
+  outline: 3px solid var(--ambar);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.boton:focus-visible {
+  border-radius: var(--radio-pildora);
+}
+
+main:focus {
+  outline: none;
+}
+
+/* Las anclas no quedan tapadas por la cabecera fija */
+section[id] {
+  scroll-margin-top: 72px;
+}
+
+@media (max-width: 759px) {
+  section[id] {
+    scroll-margin-top: 108px;
+  }
+}
+
+/* Respeta la preferencia de reducir movimiento */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+
+  .boton:hover,
+  .galeria li:hover .reloj {
+    transform: none;
   }
 }
