@@ -14,3 +14,24 @@ Funciona **en cualquier lugar del mundo**, no solo en Pasto, y permite elegir el
 | **IA** | OpenAI Responses API |
 | **Pruebas** | 122 tests unitarios, Android Lint sin errores |
 
+## Contenido
+
+1. [Qué hace ExplorIA](#1-qué-hace-exploria)
+2. [Capturas](#2-capturas)
+3. [Tecnologías utilizadas](#3-tecnologías-utilizadas)
+4. [Arquitectura](#4-arquitectura)
+5. [Patrones de diseño](#5-patrones-de-diseño-y-dónde-viven)
+6. [Cómo se genera un dato](#6-cómo-se-genera-un-dato)
+7. [Design system](#7-design-system)
+8. [Configuración e instalación](#8-configuración-e-instalación)
+9. [Pruebas](#9-pruebas)
+10. [Demo: ruta GPX y teletransporte](#10-demo-ruta-gpx-y-teletransporte)
+11. [Guion de demostración (5 minutos)](#11-guion-de-demostración-de-5-minutos)
+12. [Control de costos de la IA](#12-control-de-costos-de-la-ia)
+13. [Estructura del repositorio](#13-estructura-del-repositorio)
+14. [Dificultades y decisiones técnicas](#14-dificultades-y-decisiones-técnicas)
+15. [Limitaciones conocidas](#15-limitaciones-conocidas)
+16. [Fuentes de datos y créditos](#16-fuentes-de-datos-y-créditos)
+
+---
+
