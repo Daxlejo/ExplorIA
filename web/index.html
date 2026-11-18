@@ -269,6 +269,24 @@
         <p class="nota">Configuración mínima: <code>minSdk 30</code> (Android 11), <code>compileSdk 37</code>. Las versiones exactas están en <a href="https://github.com/Daxlejo/ExplorIA/blob/master/gradle/libs.versions.toml">gradle/libs.versions.toml</a>.</p>
       </div>
     </section>
+
+    <section class="seccion" id="costos" aria-labelledby="titulo-costos">
+      <div class="contenedor costos">
+        <div>
+          <p class="seccion__eyebrow">Control de costos de la IA</p>
+          <h2 id="titulo-costos">Todo el proyecto con 5 USD</h2>
+          <p class="seccion__intro">El presupuesto de OpenAI era de 5 USD compartidos entre tres apps. Por eso cada paso del diseño ahorra tokens.</p>
+        </div>
+        <ul class="costos__lista">
+          <li><strong>Caché con hasta 3 variantes</strong> por <code>lugar + tipo + intensidad</code>. Un dato ya generado no se vuelve a pedir; nunca más de 1 llamada por toque.</li>
+          <li><strong>Sin razonamiento interno.</strong> Los modelos se llaman con <code>reasoning.effort = "none"</code>, para que la respuesta no salga vacía.</li>
+          <li><strong>Contexto recortado</strong> a 1200 caracteres, eligiendo la sección del artículo que corresponde al enfoque.</li>
+          <li><strong>Tope de tokens de salida</strong> por intensidad: 60, 110 o 220, con <code>store = false</code>.</li>
+          <li><strong>Búsqueda web apagada</strong> por defecto (<code>OPENAI_WEB_SEARCH=false</code>).</li>
+          <li><strong>Guardia de salida:</strong> las respuestas con metacomentarios se descartan y se reintenta una sola vez.</li>
+        </ul>
+      </div>
+    </section>
   </main>
 
   <footer class="pie" id="creditos">

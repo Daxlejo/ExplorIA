@@ -588,3 +588,40 @@ code {
 .etiquetas strong {
   color: var(--texto);
 }
+
+/* Control de costos */
+.costos {
+  display: grid;
+  gap: 8px 56px;
+}
+
+.costos__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.costos__lista li {
+  position: relative;
+  padding: 0 0 14px 30px;
+  border-bottom: 1px solid var(--borde);
+  color: var(--texto-suave);
+}
+
+.costos__lista li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0.55em;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ambar);
+  box-shadow: 0 0 10px rgba(250, 199, 117, 0.6);
+}
+
+.costos__lista strong {
+  color: var(--texto);
+}
