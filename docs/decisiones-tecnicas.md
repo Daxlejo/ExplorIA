@@ -14,3 +14,9 @@ Registro breve de las decisiones de diseño más importantes: contexto, decisió
 - **Decisión:** app *standalone* para Wear OS (`minSdk 30`) con Compose for Wear OS Material 3, ejecutada en el emulador oficial de Google.
 - **Consecuencias:** se usan componentes diseñados para pantallas redondas (`ScreenScaffold`, `TransformingLazyColumn`, `EdgeButton`, `TimeText`). La demo depende del emulador y de simular el GPS.
 
+## ADR-003 — Cadena de responsabilidad para obtener lugares
+
+- **Contexto:** la app debe funcionar en cualquier lugar del mundo y no existe una única fuente que cubra todo.
+- **Decisión:** `CadenaFuentesLugares` prueba en orden Wikipedia (es), Wikipedia (en), Nominatim, la búsqueda web de OpenAI (solo si está activada) y, al final, el municipio. El respaldo del municipio solo se usa con el botón manual **Dato ahora**.
+- **Consecuencias:** agregar o quitar una fuente no afecta a las demás. Nominatim se limita a 1 petición por segundo con `User-Agent` descriptivo, como exige su política de uso.
+
