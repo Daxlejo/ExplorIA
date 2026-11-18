@@ -257,12 +257,12 @@ La guía de preparación, el texto completo para hablar y las preguntas probable
 
 El presupuesto era de 5 USD compartidos entre tres apps, así que el diseño ahorra tokens en cada paso:
 
-- **Caché por `lugar + tipo + intensidad`** (en memoria y en `cache_datos.json`): un dato ya generado no vuelve a pedirse.
+- **Caché por `lugar + tipo + intensidad` con hasta 3 variantes** (en memoria y en `cache_datos.json`, retrocompatible con el formato de un solo texto): sirve primero cualquier variante en caché no mostrada recientemente sin llamar a OpenAI; al repetir manualmente un lugar solo pide una variante nueva si hay menos de 3 guardadas (pasando los textos previos como `"No repitas estos datos"`) y, tras las 3 variantes, rota a otro `TipoDato` activo sin superar nunca 1 llamada por toque (más a lo sumo 1 reintento si `GuardiaSalidaIa` detecta metacomentarios).
 - **Sin razonamiento interno:** los modelos `gpt-5*`/`gpt-6*` se llaman con `reasoning.effort = "none"`; con el valor por defecto gastaban todos los tokens "pensando" y la respuesta salía vacía.
-- **Prompt corto** y contexto recortado a 1200 caracteres, cortando en frontera de palabra.
+- **Prompt corto y contexto por sección recortado:** en municipios o extractos cortos (`< 400` caracteres) se selecciona la sección del enfoque (`Historia`, `Gastronomía`, `Cultura`/`Turismo`) y siempre se recorta a 1200 caracteres en frontera de palabra.
 - **Tope de tokens de salida** por intensidad (60 / 110 / 220) y `store = false`.
 - **La búsqueda web de OpenAI está apagada** por defecto (`OPENAI_WEB_SEARCH=false`).
-- **Anti-repetición:** no se vuelve a hablar de un lugar mostrado hace poco.
+- **Anti-repetición:** no se vuelve a hablar de un lugar mostrado hace poco en modo automático.
 
 ---
 

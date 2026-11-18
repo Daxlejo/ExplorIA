@@ -43,3 +43,13 @@ Registro breve de las decisiones de diseño más importantes: contexto, decisió
 - **Contexto:** `registerForActivityResult` combinado con `play-services-location` producía el error de Lint `InvalidFragmentVersionForActivityResult`.
 - **Decisión:** usar `ActivityCompat.requestPermissions` + `onRequestPermissionsResult` y un sondeo reactivo del permiso en `ProveedorUbicacionFused`.
 - **Consecuencias:** Lint queda sin errores y la pantalla pasa sola de *Sin permiso* a *Explorando* al concederlo.
+
+## ADR-008 — Prompt sin metacomentarios, contexto por sección y variantes de caché
+
+- **Contexto:** en municipios o lugares con introducciones cortas de Wikipedia (`exintro=1`), como Ipiales o Popayán en enfoque `HISTORICO`, el modelo narraba lo que faltaba («El contexto no menciona...») y pulsar *Dato ahora* / *Otro dato* varias veces en el mismo lugar devolvía exactamente el mismo texto desde la caché.
+- **Decisión:**
+  1. Reescribir `PromptBuilder.SISTEMA` prohibiendo explícitamente frases como «el contexto», «la información», «no se menciona» o «no aparece», e indicando que, si falta material del enfoque pedido, cuente el hecho real más interesante disponible como una afirmación natural a quien camina.
+  2. Cuando el resumen inicial es corto (`< 400` caracteres) o el lugar es un municipio (`FuenteMunicipio` / `FuenteWikipedia`), pedir el texto plano completo (`prop=extracts&explaintext=1` sin `exintro`) y seleccionar con `ExtractorContextoWikipedia` la sección que coincide con el enfoque (`Historia`/`History`, `Gastronomía`/`Cocina`/`Cuisine`, `Cultura`/`Turismo`/`Patrimonio`), recortando siempre a 1200 caracteres en frontera de palabra.
+  3. Añadir `GuardiaSalidaIa` en `data/ia` para rechazar respuestas con metacomentarios, reintentar una sola vez con `TipoDato.INTERESANTE` sin cachear nunca textos rechazados y limpiar al inicio las entradas antiguas defectuosas en `cache_datos.json`.
+  4. Permitir hasta 3 variantes por clave (`lugar.id|tipo|intensidad`) en `CacheDatos` (con lectura retrocompatible del formato antiguo de un solo texto), servir primero variantes no mostradas recientemente, pasar los textos previos como `"No repitas estos datos"` al pedir una variante nueva y rotar a otro `TipoDato` marcado cuando las 3 variantes ya se mostraron.
+- **Consecuencias:** cada pulsación repetida en un mismo lugar entrega un dato real distinto sin metacomentarios, conservando el dominio en Kotlin puro y el presupuesto acotado a máximo 3 variantes por clave y 1 llamada a OpenAI por toque (más a lo sumo 1 reintento de guardia).
