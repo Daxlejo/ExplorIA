@@ -20,3 +20,25 @@ Cuando salte un dato: «Vibra y muestra el tipo de dato, el lugar, la distancia 
 
 **Dices:** «La app no está atada a Pasto. En Bogotá encuentra la Catedral Primada; en Cartagena, la Torre del Reloj; en París, la Torre Eiffel, con el dato en español. Funciona en cualquier punto del planeta porque los lugares se buscan en vivo en Wikipedia y OpenStreetMap.»
 
+## 3. Tipo e intensidad (45 s)
+
+**Haces:** Configuración → solo **Cómico**, intensidad **Intenso** → `paris` o `pasto` → **Dato ahora**.
+
+**Dices:** «El usuario decide el tono. Suave da una frase y como máximo un dato por hora; Normal, dos frases y dos por hora; Intenso, un párrafo y hasta cuatro. En Cómico el texto cambia de tono, pero siempre se basa en hechos reales: a la IA le prohibimos inventar.»
+
+## 4. Calle sin lugares y botón manual (30 s)
+
+**Haces:** `.\demo\teletransporte.bat calle` → **Dato ahora**.
+
+**Dices:** «En una calle residencial no sale nada automático, a propósito. Pero si pido un dato con el botón, la app nunca me deja sin respuesta: si no hay hitos cerca, me cuenta algo del municipio.»
+
+## 5. Aquí, donde estamos (30 s)
+
+**Haces:** pega el comando de la sede de la exposición → **Dato ahora**.
+
+## 6. Historial y favoritos (20 s)
+
+**Haces:** Inicio → ícono de reloj → abrir una entrada → estrella → **Solo favoritos**.
+
+**Dices:** «Todo queda en un historial agrupado por día. También sirve para no repetir: un lugar mostrado hace poco no vuelve a salir.»
+
