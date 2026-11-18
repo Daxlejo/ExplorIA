@@ -6,6 +6,10 @@ import com.daxlejo.datoscerca.data.red.ClienteHttp
 import com.daxlejo.datoscerca.data.red.RespuestaHttp
 import com.daxlejo.datoscerca.domain.error.ErrorDato
 import com.daxlejo.datoscerca.domain.error.Resultado
+import com.daxlejo.datoscerca.domain.modelo.TipoDato
+import com.daxlejo.datoscerca.domain.motor.FabricaPoliticas
+import com.daxlejo.datoscerca.domain.motor.Prompt
+import com.daxlejo.datoscerca.domain.motor.PromptBuilder
 import com.daxlejo.datoscerca.domain.puerto.GeneradorDatos
 import com.daxlejo.datoscerca.domain.puerto.SolicitudGeneracion
 import java.util.Locale
@@ -37,7 +41,28 @@ class GeneradorDatosOpenAi(
             Log.e(ETIQUETA, "OPENAI_MODEL vacío en BuildConfig")
             return Resultado.Fallo(ErrorDato.ErrorIa("Falta configurar OPENAI_MODEL"))
         }
-        val prompt = solicitud.prompt
+        val primerIntento = solicitarTexto(solicitud.prompt)
+        if (primerIntento !is Resultado.Exito) return primerIntento
+        if (!GuardiaSalidaIa.contieneMetacomentarios(primerIntento.valor)) {
+            return primerIntento
+        }
+
+        Log.w(ETIQUETA, "Respuesta rechazada por metacomentarios; reintentando con INTERESANTE")
+        val promptReintento = construirPromptReintento(solicitud)
+        return when (val segundoIntento = solicitarTexto(promptReintento)) {
+            is Resultado.Fallo -> segundoIntento
+            is Resultado.Exito -> {
+                if (GuardiaSalidaIa.contieneMetacomentarios(segundoIntento.valor)) {
+                    Log.w(ETIQUETA, "El reintento también incluyó metacomentarios; se descarta")
+                    Resultado.Fallo(ErrorDato.ErrorIa("La IA no pudo redactar un dato válido para este lugar"))
+                } else {
+                    segundoIntento
+                }
+            }
+        }
+    }
+
+    private suspend fun solicitarTexto(prompt: Prompt): Resultado<String> {
         val peticion = PeticionResponses(
             model = modelo,
             instructions = prompt.sistema,
@@ -61,6 +86,15 @@ class GeneradorDatosOpenAi(
             }
             is RespuestaHttp.Exito -> extraerTexto(respuesta.cuerpo)
         }
+    }
+
+    private fun construirPromptReintento(solicitud: SolicitudGeneracion): Prompt {
+        val formato = FabricaPoliticas().para(solicitud.intensidad).formato
+        return PromptBuilder()
+            .lugar(solicitud.lugar)
+            .tipo(TipoDato.INTERESANTE)
+            .formato(formato)
+            .build()
     }
 
     private fun extraerTexto(cuerpoJson: String): Resultado<String> {

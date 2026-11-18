@@ -2,6 +2,7 @@ package com.daxlejo.datoscerca.data.ia
 
 import android.util.Log
 import com.daxlejo.datoscerca.data.lugares.FuenteWikipedia
+import com.daxlejo.datoscerca.domain.error.ErrorDato
 import com.daxlejo.datoscerca.domain.error.Resultado
 import com.daxlejo.datoscerca.domain.puerto.GeneradorDatos
 import com.daxlejo.datoscerca.domain.puerto.SolicitudGeneracion
@@ -31,7 +32,7 @@ class CacheDatos(
 
     fun guardar(clave: String, texto: String) {
         val limpio = texto.trim()
-        if (limpio.isEmpty()) return
+        if (limpio.isEmpty() || GuardiaSalidaIa.contieneMetacomentarios(limpio)) return
         entradas[clave] = limpio
         persistirEnArchivo()
     }
@@ -39,7 +40,9 @@ class CacheDatos(
     fun guardarLote(lote: Map<String, String>) {
         lote.forEach { (clave, texto) ->
             val limpio = texto.trim()
-            if (limpio.isNotEmpty()) entradas[clave] = limpio
+            if (limpio.isNotEmpty() && !GuardiaSalidaIa.contieneMetacomentarios(limpio)) {
+                entradas[clave] = limpio
+            }
         }
         persistirEnArchivo()
     }
@@ -93,6 +96,9 @@ class GeneradorDatosConCache(
         return when (val resultado = delegado.generar(solicitud)) {
             is Resultado.Exito -> {
                 val limpio = resultado.valor.trim()
+                if (GuardiaSalidaIa.contieneMetacomentarios(limpio)) {
+                    return Resultado.Fallo(ErrorDato.ErrorIa("Respuesta con metacomentarios rechazada"))
+                }
                 if (limpio.isNotEmpty()) cache.guardar(clave, limpio)
                 Resultado.Exito(limpio)
             }

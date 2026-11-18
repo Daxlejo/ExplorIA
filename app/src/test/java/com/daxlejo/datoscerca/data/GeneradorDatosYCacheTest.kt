@@ -4,6 +4,7 @@ import com.daxlejo.datoscerca.data.demo.RutaDemoPasto
 import com.daxlejo.datoscerca.data.ia.CacheDatos
 import com.daxlejo.datoscerca.data.ia.GeneradorDatosConCache
 import com.daxlejo.datoscerca.data.ia.GeneradorDatosOpenAi
+import com.daxlejo.datoscerca.data.ia.GuardiaSalidaIa
 import com.daxlejo.datoscerca.data.red.ClienteHttp
 import com.daxlejo.datoscerca.data.red.RespuestaHttp
 import com.daxlejo.datoscerca.domain.error.ErrorDato
@@ -187,5 +188,70 @@ class GeneradorDatosYCacheTest {
         assertEquals(Resultado.Fallo(ErrorDato.SinInternet), sinRed.generar(solicitud()))
         assertTrue((errorHttp.generar(solicitud()) as Resultado.Fallo).error is ErrorDato.ErrorIa)
         assertTrue((sinClave.generar(solicitud()) as Resultado.Fallo).error is ErrorDato.ErrorIa)
+    }
+
+    @Test
+    fun `guardia de salida rechaza metacomentarios reintenta una vez como interesante y nunca guarda el texto rechazado`() = runTest {
+        val cuerposEnviados = mutableListOf<String>()
+        val respuestas = ArrayDeque(
+            listOf(
+                """{"output_text":"El contexto no menciona un hecho histórico vinculado a Ipiales."}""",
+                """{"output_text":"Ipiales es un municipio fronterizo famoso por el Santuario de Las Lajas."}""",
+            ),
+        )
+        val cliente = object : ClienteHttp {
+            override suspend fun get(url: String, cabeceras: Map<String, String>) = RespuestaHttp.SinConexion
+            override suspend fun postJson(url: String, cuerpoJson: String, cabeceras: Map<String, String>): RespuestaHttp {
+                cuerposEnviados += cuerpoJson
+                return RespuestaHttp.Exito(respuestas.removeFirst())
+            }
+        }
+        val cache = CacheDatos()
+        val generador = GeneradorDatosConCache(
+            delegado = GeneradorDatosOpenAi(cliente, apiKey = "clave", modelo = "gpt-6-luna"),
+            cache = cache,
+        )
+        val peticion = solicitud(tipo = TipoDato.HISTORICO)
+
+        val resultado = generador.generar(peticion).valorExitoso()
+
+        assertEquals("Ipiales es un municipio fronterizo famoso por el Santuario de Las Lajas.", resultado)
+        assertEquals(2, cuerposEnviados.size)
+        assertTrue(cuerposEnviados[0].contains("hecho histórico"))
+        assertTrue(cuerposEnviados[1].contains("lo más interesante y relevante del lugar"))
+        assertEquals(resultado, cache.obtener(peticion.claveCache))
+    }
+
+    @Test
+    fun `si el reintento tambien contiene frases prohibidas devuelve ErrorIa y la cache queda vacia`() = runTest {
+        var llamadas = 0
+        val cliente = object : ClienteHttp {
+            override suspend fun get(url: String, cabeceras: Map<String, String>) = RespuestaHttp.SinConexion
+            override suspend fun postJson(url: String, cuerpoJson: String, cabeceras: Map<String, String>): RespuestaHttp {
+                llamadas++
+                val texto = if (llamadas == 1) {
+                    "No se menciona ninguna fecha histórica en el texto."
+                } else {
+                    "No hay información ni aparece detalle alguno."
+                }
+                return RespuestaHttp.Exito("""{"output_text":"$texto"}""")
+            }
+        }
+        val cache = CacheDatos()
+        val generador = GeneradorDatosConCache(
+            delegado = GeneradorDatosOpenAi(cliente, apiKey = "clave", modelo = "gpt-6-luna"),
+            cache = cache,
+        )
+        val peticion = solicitud(tipo = TipoDato.HISTORICO)
+
+        val resultado = generador.generar(peticion)
+
+        assertTrue(resultado is Resultado.Fallo)
+        assertTrue((resultado as Resultado.Fallo).error is ErrorDato.ErrorIa)
+        assertEquals(2, llamadas)
+        assertEquals(0, cache.tamano())
+        assertTrue(GuardiaSalidaIa.contieneMetacomentarios("El contexto no indica fechas."))
+        assertTrue(GuardiaSalidaIa.contieneMetacomentarios("No aparece registrado."))
+        assertFalse(GuardiaSalidaIa.contieneMetacomentarios("Fue fundada en 1537 por Sebastián de Belalcázar."))
     }
 }
