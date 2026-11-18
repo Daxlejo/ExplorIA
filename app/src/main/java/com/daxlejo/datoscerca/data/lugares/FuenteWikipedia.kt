@@ -8,6 +8,7 @@ import com.daxlejo.datoscerca.domain.error.Resultado
 import com.daxlejo.datoscerca.domain.modelo.Coordenada
 import com.daxlejo.datoscerca.domain.modelo.Lugar
 import com.daxlejo.datoscerca.domain.modelo.Relevancia
+import com.daxlejo.datoscerca.domain.modelo.TipoDato
 import com.daxlejo.datoscerca.domain.puerto.FuenteLugares
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -21,11 +22,14 @@ import kotlinx.serialization.json.Json
 /**
  * Eslabón de la cadena de lugares que consulta MediaWiki GeoSearch (`action=query&list=geosearch`)
  * en el idioma indicado (`es` o `en`) y obtiene el resumen en texto plano de los artículos cercanos.
+ * Cuando el resumen inicial es corto (< 400 caracteres) o corresponde a un municipio, solicita el
+ * extracto completo por secciones para enriquecer el contexto histórico, gastronómico y cultural.
  */
 class FuenteWikipedia(
     private val idioma: String,
     private val clienteHttp: ClienteHttp,
     private val json: Json = jsonPorDefecto,
+    private val enfoquePreferido: suspend () -> TipoDato? = { null },
 ) : FuenteLugares {
 
     override suspend fun buscarCercanos(coordenada: Coordenada, radioMetros: Int): Resultado<List<Lugar>> {
@@ -41,17 +45,45 @@ class FuenteWikipedia(
         }
     }
 
-    /** Busca el resumen de un artículo por término (para enriquecer hitos OSM o el municipio). */
-    suspend fun buscarResumenPorTitulo(termino: String): String? {
+    /** Busca el resumen o contexto por secciones de un artículo por término (para hitos OSM o municipios). */
+    suspend fun buscarResumenPorTitulo(
+        termino: String,
+        esMunicipio: Boolean = false,
+        tituloPreferido: String? = null,
+    ): String? {
         if (termino.isBlank()) return null
         val codificado = URLEncoder.encode(termino, StandardCharsets.UTF_8.name())
+        val limiteBusqueda = if (esMunicipio || !tituloPreferido.isNullOrBlank()) LIMITE_BUSQUEDA_TITULO else 1
         val urlBusqueda = "https://$idioma.wikipedia.org/w/api.php" +
-            "?action=query&list=search&srsearch=$codificado&srlimit=1&format=json"
+            "?action=query&list=search&srsearch=$codificado&srlimit=$limiteBusqueda&format=json"
         val idPagina = when (val res = clienteHttp.get(urlBusqueda)) {
-            is RespuestaHttp.Exito -> parsearPrimerIdBusqueda(res.cuerpo)
+            is RespuestaHttp.Exito -> parsearIdBusqueda(res.cuerpo, tituloPreferido)
             else -> null
         } ?: return null
-        return obtenerResumenes(listOf(idPagina))[idPagina]?.takeIf { it.isNotBlank() }
+
+        val enfoque = enfoquePreferido()
+        if (esMunicipio) {
+            val completo = obtenerExtractoCompleto(idPagina)
+            if (!completo.isNullOrBlank()) {
+                return ExtractorContextoWikipedia.seleccionarContexto(
+                    extractoCompleto = completo,
+                    enfoque = enfoque,
+                ).takeIf { it.isNotBlank() }
+            }
+        }
+
+        val intro = obtenerResumenes(listOf(idPagina))[idPagina]?.takeIf { it.isNotBlank() } ?: return null
+        if (ExtractorContextoWikipedia.requiereTextoCompleto(intro, esMunicipio = false)) {
+            val completo = obtenerExtractoCompleto(idPagina)
+            if (!completo.isNullOrBlank()) {
+                return ExtractorContextoWikipedia.seleccionarContexto(
+                    extractoCompleto = completo,
+                    extractoIntroRespaldo = intro,
+                    enfoque = enfoque,
+                )
+            }
+        }
+        return ExtractorContextoWikipedia.recortarEnPalabra(intro)
     }
 
     private suspend fun procesarGeoSearch(
@@ -73,20 +105,42 @@ class FuenteWikipedia(
         if (dentroDelRadio.isEmpty()) return Resultado.Exito(emptyList())
 
         val resumenes = obtenerResumenes(dentroDelRadio.map(CandidatoGeo::pageId))
-        val lugares = dentroDelRadio
-            .filter { candidato -> esExtractoDeLugar(resumenes[candidato.pageId].orEmpty()) }
-            .map { candidato ->
-                val extracto = resumenes[candidato.pageId]?.trim().orEmpty()
-                Lugar(
-                    id = "wikipedia-$idioma:${candidato.pageId}",
-                    nombre = limpiarTitulo(candidato.titulo),
-                    coordenada = candidato.coordenada,
-                    distanciaMetros = candidato.distanciaMetros,
-                    contexto = extracto.ifBlank { "${candidato.titulo}." },
-                    fuente = "wikipedia-$idioma",
-                    relevancia = Relevancia.ARTICULO_WIKIPEDIA,
-                )
+        val validos = dentroDelRadio.filter { candidato ->
+            esExtractoDeLugar(resumenes[candidato.pageId].orEmpty())
+        }
+        val enfoque = enfoquePreferido()
+        var enriquecidos = 0
+        val lugares = validos.map { candidato ->
+            val intro = resumenes[candidato.pageId]?.trim().orEmpty()
+            val contexto = if (
+                enriquecidos < MAX_ENRIQUECIDOS_GEOSEARCH &&
+                intro.isNotEmpty() &&
+                ExtractorContextoWikipedia.requiereTextoCompleto(intro)
+            ) {
+                enriquecidos++
+                val completo = obtenerExtractoCompleto(candidato.pageId)
+                if (!completo.isNullOrBlank()) {
+                    ExtractorContextoWikipedia.seleccionarContexto(
+                        extractoCompleto = completo,
+                        extractoIntroRespaldo = intro,
+                        enfoque = enfoque,
+                    )
+                } else {
+                    ExtractorContextoWikipedia.recortarEnPalabra(intro)
+                }
+            } else {
+                ExtractorContextoWikipedia.recortarEnPalabra(intro)
             }
+            Lugar(
+                id = "wikipedia-$idioma:${candidato.pageId}",
+                nombre = limpiarTitulo(candidato.titulo),
+                coordenada = candidato.coordenada,
+                distanciaMetros = candidato.distanciaMetros,
+                contexto = contexto.ifBlank { "${candidato.titulo}." },
+                fuente = "wikipedia-$idioma",
+                relevancia = Relevancia.ARTICULO_WIKIPEDIA,
+            )
+        }
         return Resultado.Exito(lugares)
     }
 
@@ -96,22 +150,38 @@ class FuenteWikipedia(
         val url = "https://$idioma.wikipedia.org/w/api.php" +
             "?action=query&prop=extracts&exintro=1&explaintext=1&redirects=1&pageids=$listaIds&format=json"
         val respuesta = clienteHttp.get(url) as? RespuestaHttp.Exito ?: return emptyMap()
-        return try {
-            val paginas = json.decodeFromString<RespuestaMediaWikiPaginas>(respuesta.cuerpo).query?.pages.orEmpty()
-            paginas.values.mapNotNull { pagina ->
-                val id = pagina.pageid
-                val texto = pagina.extract?.trim()
-                if (id != null && !texto.isNullOrEmpty()) id to texto else null
-            }.toMap()
-        } catch (e: SerializationException) {
-            Log.w(ETIQUETA, "No se pudieron leer los extractos de Wikipedia ($idioma)", e)
-            emptyMap()
-        }
+        return decodificarExtractos(respuesta.cuerpo)
     }
 
-    private fun parsearPrimerIdBusqueda(cuerpoJson: String): Long? = try {
-        json.decodeFromString<RespuestaMediaWikiBusqueda>(cuerpoJson)
-            .query?.search?.firstOrNull()?.pageid
+    private suspend fun obtenerExtractoCompleto(idPagina: Long): String? {
+        val url = "https://$idioma.wikipedia.org/w/api.php" +
+            "?action=query&prop=extracts&explaintext=1&redirects=1&pageids=$idPagina&format=json"
+        val respuesta = clienteHttp.get(url) as? RespuestaHttp.Exito ?: return null
+        return decodificarExtractos(respuesta.cuerpo)[idPagina]
+    }
+
+    private fun decodificarExtractos(cuerpoJson: String): Map<Long, String> = try {
+        val paginas = json.decodeFromString<RespuestaMediaWikiPaginas>(cuerpoJson).query?.pages.orEmpty()
+        paginas.values.mapNotNull { pagina ->
+            val id = pagina.pageid
+            val texto = pagina.extract?.trim()
+            if (id != null && !texto.isNullOrEmpty()) id to texto else null
+        }.toMap()
+    } catch (e: SerializationException) {
+        Log.w(ETIQUETA, "No se pudieron leer los extractos de Wikipedia ($idioma)", e)
+        emptyMap()
+    }
+
+    private fun parsearIdBusqueda(cuerpoJson: String, tituloPreferido: String?): Long? = try {
+        val resultados = json.decodeFromString<RespuestaMediaWikiBusqueda>(cuerpoJson)
+            .query?.search.orEmpty()
+            .filter { esTituloDeLugar(it.titulo) }
+        val preferido = tituloPreferido?.trim()?.takeIf { it.isNotEmpty() }
+        val coincidenciaExacta = preferido?.let { buscado ->
+            resultados.firstOrNull { limpiarTitulo(it.titulo).equals(buscado, ignoreCase = true) }
+                ?: resultados.firstOrNull { limpiarTitulo(it.titulo).startsWith(buscado, ignoreCase = true) }
+        }
+        (coincidenciaExacta ?: resultados.firstOrNull())?.pageid
     } catch (e: SerializationException) {
         Log.w(ETIQUETA, "No se pudo leer búsqueda de Wikipedia ($idioma)", e)
         null
@@ -206,7 +276,9 @@ class FuenteWikipedia(
         private const val RADIO_MINIMO_METROS = 10
         private const val RADIO_MAXIMO_METROS = 10_000
         private const val LIMITE_GEOSEARCH = 10
+        private const val LIMITE_BUSQUEDA_TITULO = 5
         private const val MAX_RESUMENES = 6
+        private const val MAX_ENRIQUECIDOS_GEOSEARCH = 2
         private val PARENTESIS_FINAL_REGEX = Regex("""\s*\([^)]+\)\s*$""")
 
         val jsonPorDefecto = Json {

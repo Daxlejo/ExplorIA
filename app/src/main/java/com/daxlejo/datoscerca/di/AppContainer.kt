@@ -32,6 +32,7 @@ import com.daxlejo.datoscerca.domain.casouso.ObservarHistorial
 import com.daxlejo.datoscerca.domain.casouso.ObtenerDatoAhora
 import com.daxlejo.datoscerca.domain.casouso.ObtenerDatoParaUbicacion
 import com.daxlejo.datoscerca.domain.error.Resultado
+import com.daxlejo.datoscerca.domain.modelo.TipoDato
 import com.daxlejo.datoscerca.domain.motor.AvisadorDato
 import com.daxlejo.datoscerca.domain.motor.FabricaPoliticas
 import com.daxlejo.datoscerca.domain.motor.FabricaSelectores
@@ -84,8 +85,16 @@ class AppContainer(context: Context) {
     private val proveedorUbicacion: ProveedorUbicacion get() = proveedorUbicacionFused
 
     private val fuenteLugares: FuenteLugares by lazy {
-        val wikipediaEs = FuenteWikipedia(idioma = "es", clienteHttp = clienteHttp)
-        val wikipediaEn = FuenteWikipedia(idioma = "en", clienteHttp = clienteHttp)
+        val wikipediaEs = FuenteWikipedia(
+            idioma = "es",
+            clienteHttp = clienteHttp,
+            enfoquePreferido = ::obtenerEnfoquePreferido,
+        )
+        val wikipediaEn = FuenteWikipedia(
+            idioma = "en",
+            clienteHttp = clienteHttp,
+            enfoquePreferido = ::obtenerEnfoquePreferido,
+        )
         val limitadorNominatim = LimitadorFrecuencia(reloj = reloj)
         val nominatim = FuenteNominatim(
             clienteHttp = clienteHttp,
@@ -191,6 +200,15 @@ class AppContainer(context: Context) {
             is Resultado.Exito -> filtroRepeticion.idsAExcluir(recientes.valor, reloj.ahoraMs())
             is Resultado.Fallo -> emptySet()
         }
+
+    private suspend fun obtenerEnfoquePreferido(): TipoDato? {
+        val config = repositorioConfiguracion.observar().first()
+        val ultimoTipo = when (val recientes = repositorioHistorial.recientes(1)) {
+            is Resultado.Exito -> recientes.valor.firstOrNull()?.dato?.tipo
+            is Resultado.Fallo -> null
+        }
+        return FabricaSelectores().para(config).seleccionar(config.tipos, ultimoTipo)
+    }
 
     private suspend fun esModoDemoActivo(): Boolean {
         val activa = repositorioConfiguracion.observar().first().modoDemo

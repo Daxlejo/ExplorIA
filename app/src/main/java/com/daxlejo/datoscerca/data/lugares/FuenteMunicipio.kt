@@ -41,8 +41,15 @@ class FuenteMunicipio(
     ): Lugar {
         val terminoWiki = listOfNotNull(direccion.municipio, direccion.region, direccion.pais)
             .joinToString(" ")
-        val resumenWiki = fuenteWikipediaEs?.buscarResumenPorTitulo(terminoWiki)
-            ?: fuenteWikipediaEs?.buscarResumenPorTitulo(direccion.municipio)
+        val resumenWiki = fuenteWikipediaEs?.buscarResumenPorTitulo(
+            termino = terminoWiki,
+            esMunicipio = true,
+            tituloPreferido = direccion.municipio,
+        ) ?: fuenteWikipediaEs?.buscarResumenPorTitulo(
+            termino = direccion.municipio,
+            esMunicipio = true,
+            tituloPreferido = direccion.municipio,
+        )
         val contextoBase = buildString {
             append("${direccion.municipio} es un municipio")
             if (!direccion.region.isNullOrBlank()) append(" de ${direccion.region}")
@@ -52,11 +59,12 @@ class FuenteMunicipio(
                 append(" El punto consultado se encuentra en el sector de ${direccion.barrio}.")
             }
         }
-        val contexto = if (!resumenWiki.isNullOrBlank()) {
+        val contextoSinRecortar = if (!resumenWiki.isNullOrBlank()) {
             "$resumenWiki $contextoBase"
         } else {
             contextoBase
         }
+        val contexto = ExtractorContextoWikipedia.recortarEnPalabra(contextoSinRecortar)
         return Lugar(
             id = "municipio:${normalizarId(direccion.municipio)}",
             nombre = direccion.municipio,
