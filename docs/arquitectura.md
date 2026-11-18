@@ -1,4 +1,4 @@
-# Arquitectura — Datos Cerca (Wear OS)
+# Arquitectura — ExplorIA (Wear OS)
 
 Estado: **Versión final (Sesión 2 de 2)**. El dominio permanece en Kotlin puro sin tocar sus contratos; la capa `data` conecta ubicación real en primer plano (`FusedLocationProviderClient`), la cadena de fuentes de lugares en cualquier parte del mundo (Wikipedia `es` → Wikipedia `en` → Nominatim → OpenAI Web Search → Municipio/región) y la generación real con OpenAI (`Responses API`) decorada con caché por `lugar + tipo + intensidad` y precarga sin conexión para el modo demo.
 
