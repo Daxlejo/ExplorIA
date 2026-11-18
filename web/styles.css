@@ -1,0 +1,196 @@
+/* ExplorIA — sitio del proyecto
+   Mismo design system que la app (ui/theme): fondo OLED negro,
+   primario teal, acento ámbar, serif para títulos y sans-serif para el cuerpo. */
+
+:root {
+  --negro: #000000;
+  --superficie: #0d1412;
+  --superficie-2: #14201c;
+  --borde: #23332e;
+  --teal: #1d9e75;
+  --teal-claro: #5dcaa5;
+  --teal-oscuro: #0f3d30;
+  --ambar: #fac775;
+  --texto: #ececec;
+  --texto-suave: #a9b7b2;
+  --texto-sobre-teal: #03140e;
+
+  --serif: "Noto Serif", Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "Roboto Mono", monospace;
+
+  --radio: 14px;
+  --radio-pildora: 999px;
+  --ancho: 1120px;
+  --gutter: 16px;
+  --espacio-seccion: clamp(64px, 10vw, 120px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--negro);
+  color: var(--texto);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: var(--teal-claro);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--ambar);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0 0 0.5em;
+  letter-spacing: 0.01em;
+}
+
+h2 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+h3 {
+  font-size: 1.2rem;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 0.1em 0.35em;
+  overflow-wrap: anywhere;
+}
+
+.contenedor {
+  width: 100%;
+  max-width: var(--ancho);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* Enlace para saltar al contenido */
+.saltar {
+  position: absolute;
+  left: 8px;
+  top: -60px;
+  z-index: 100;
+  background: var(--ambar);
+  color: var(--negro);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.saltar:focus {
+  top: 8px;
+}
+
+/* Cabecera */
+.cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--borde);
+}
+
+.cabecera__fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 60px;
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.marca__bombillo {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ambar);
+  box-shadow: 0 0 12px 3px rgba(250, 199, 117, 0.55);
+}
+
+.nav {
+  display: flex;
+  gap: 4px 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav a {
+  color: var(--texto-suave);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.nav a:hover {
+  color: var(--teal-claro);
+}
+
+/* Secciones */
+.seccion {
+  padding: var(--espacio-seccion) 0;
+  border-top: 1px solid var(--borde);
+}
+
+.seccion__eyebrow {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ambar);
+  margin-bottom: 12px;
+}
+
+.seccion__intro {
+  max-width: 64ch;
+  color: var(--texto-suave);
+  margin-bottom: 40px;
+}
