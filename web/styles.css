@@ -357,3 +357,36 @@ code {
 .tarjeta strong {
   color: var(--texto);
 }
+
+/* Galería de capturas en marcos de reloj */
+.galeria {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 56px 32px;
+  list-style: none;
+  margin: 0;
+  padding: 16px 0 0;
+}
+
+.galeria figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.galeria .reloj {
+  width: min(220px, 70vw);
+  transition: transform 0.2s ease;
+}
+
+.galeria li:hover .reloj {
+  transform: scale(1.03);
+}
+
+.galeria figcaption {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--texto-suave);
+}
