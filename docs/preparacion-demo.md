@@ -59,3 +59,24 @@ La primera consulta de cada destino tarda de 4 a 7 segundos; después responde a
 3. Toca **Dato ahora**. Si hay un lugar emblemático a menos de 500 m se muestra; si no, sale un dato del municipio.
 4. Guarda el comando en un bloc de notas para pegarlo en la presentación.
 
+## 6. Dejar el reloj listo
+
+1. Vuelve a la configuración con la que vas a empezar (por ejemplo Interesante + Histórico, intensidad Normal).
+2. **Activa el Modo demo.** Quita el tope por hora; sin él, en *Normal* solo saldrían 2 datos automáticos por hora y parecería que la app se colgó.
+3. Teletranspórtate a un punto neutro: `.\demo\teletransporte.bat calle`.
+4. Cierra el emulador con la **X** normal para guardar su estado (no uses *Wipe Data* ni *Cold Boot*).
+
+## 7. Antes de presentar (10 minutos)
+
+- Abre el emulador, prepara `$adb` y verifica `adb devices`.
+- Confirma que la app muestra **Explorando** y el **Modo demo** está activado.
+- Deja abierta *Extended Controls → Location → Routes* con `demo/ruta-pasto.gpx` importado y velocidad `3x` (sin pulsar Play).
+- Ten a mano los comandos de teletransporte y el de la sede.
+
+## Plan B
+
+| Problema | Qué hacer |
+|---|---|
+| Se cae el internet | El Modo demo mantiene la ruta de Pasto y los destinos precargados salen de la caché |
+| Un dato tarda | Seguir explicando la cadena de fuentes mientras carga (4–7 s en frío) |
+| Falla el emulador | Mostrar las capturas de `auditorias/capturas/` y los diagramas de `docs/arquitectura.md` |
