@@ -109,7 +109,7 @@ class ClienteHttpOkHttp(
         private val MEDIA_JSON = "application/json; charset=utf-8".toMediaType()
 
         const val USER_AGENT_DESCRIPTIVO =
-            "DatosCercaWearOS/1.0 (https://github.com/Daxlejo/SmartWatch; contacto: daxlejo@udenar.edu.co)"
+            "ExplorIAWearOS/1.0 (https://github.com/Daxlejo/SmartWatch; contacto: daxlejo@udenar.edu.co)"
 
         fun crearOkHttpPorDefecto(): OkHttpClient = OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
