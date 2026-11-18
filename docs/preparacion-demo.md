@@ -47,3 +47,15 @@ Con el **Modo demo apagado**, para que Pasto también se genere con IA y quede g
 
 La primera consulta de cada destino tarda de 4 a 7 segundos; después responde al instante.
 
+## 5. Agregar el sitio de la exposición
+
+1. En Google Maps haz clic derecho sobre el edificio exacto y copia las coordenadas (`latitud, longitud`).
+2. `adb` las necesita **al revés** (primero la longitud):
+
+```powershell
+& $adb -s emulator-5554 emu geo fix <LONGITUD> <LATITUD>
+```
+
+3. Toca **Dato ahora**. Si hay un lugar emblemático a menos de 500 m se muestra; si no, sale un dato del municipio.
+4. Guarda el comando en un bloc de notas para pegarlo en la presentación.
+
