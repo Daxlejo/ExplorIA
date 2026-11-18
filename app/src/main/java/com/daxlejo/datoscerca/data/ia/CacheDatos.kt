@@ -84,11 +84,23 @@ class CacheDatos(
             val texto = archivo.readText()
             if (texto.isBlank()) return
             val raiz = json.parseToJsonElement(texto) as? JsonObject ?: return
+            var huboDescartadas = false
             for ((clave, elemento) in raiz) {
-                val variantes = extraerVariantesJson(elemento)
-                if (variantes.isNotEmpty()) {
-                    entradas[clave] = variantes
+                val brutas = extraerTextosBrutos(elemento)
+                val limpias = brutas
+                    .map(String::trim)
+                    .filter { it.isNotEmpty() && !GuardiaSalidaIa.contieneMetacomentarios(it) }
+                    .distinct()
+                    .take(MAX_VARIANTES)
+                if (limpias.size < brutas.count { it.isNotBlank() }) {
+                    huboDescartadas = true
                 }
+                if (limpias.isNotEmpty()) {
+                    entradas[clave] = limpias
+                }
+            }
+            if (huboDescartadas) {
+                persistirEnArchivo()
             }
         } catch (e: IOException) {
             Log.w(ETIQUETA, "No se pudo leer el archivo de caché", e)
@@ -99,19 +111,12 @@ class CacheDatos(
         }
     }
 
-    private fun extraerVariantesJson(elemento: JsonElement): List<String> {
-        val brutas = when (elemento) {
-            is JsonPrimitive -> if (elemento.isString) listOf(elemento.content) else emptyList()
-            is JsonArray -> elemento.mapNotNull { item ->
-                (item as? JsonPrimitive)?.takeIf(JsonPrimitive::isString)?.content
-            }
-            else -> emptyList()
+    private fun extraerTextosBrutos(elemento: JsonElement): List<String> = when (elemento) {
+        is JsonPrimitive -> if (elemento.isString) listOf(elemento.content) else emptyList()
+        is JsonArray -> elemento.mapNotNull { item ->
+            (item as? JsonPrimitive)?.takeIf(JsonPrimitive::isString)?.content
         }
-        return brutas
-            .map(String::trim)
-            .filter { it.isNotEmpty() }
-            .distinct()
-            .take(MAX_VARIANTES)
+        else -> emptyList()
     }
 
     private fun persistirEnArchivo() {

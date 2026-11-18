@@ -309,4 +309,38 @@ class GeneradorDatosYCacheTest {
             cache.obtenerVariantes("wikipedia-es:9855193|HISTORICO|NORMAL"),
         )
     }
+
+    @Test
+    fun `al cargar desde disco descarta entradas con metacomentarios de Ipiales y Popayan sin borrar las buenas`() = runTest {
+        val archivo = Files.createTempFile("cache-limpieza", ".json").toFile().apply { deleteOnExit() }
+        archivo.writeText(
+            """
+            {
+              "municipio:ipiales|HISTORICO|NORMAL": "El contexto no menciona un hecho histórico ni fechas o personajes vinculados a Ipiales. Sí destaca el Santuario de Las Lajas.",
+              "municipio:popayan|HISTORICO|NORMAL": [
+                "Popayán es la capital y la ciudad más poblada del departamento del Cauca. El contexto no menciona hechos históricos, fechas ni personajes vinculados con la ciudad."
+              ],
+              "wikipedia-es:9855193|HISTORICO|NORMAL": "Durante la Colonia fue la Plaza Mayor de la ciudad y escenario de mercados y cabildos.",
+              "municipio:pasto|HISTORICO|NORMAL": [
+                "No se menciona la fecha exacta en el texto.",
+                "San Juan de Pasto fue fundada en 1537 en el valle de Atriz."
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        val cache = CacheDatos(archivo)
+
+        assertEquals(null, cache.obtener("municipio:ipiales|HISTORICO|NORMAL"))
+        assertEquals(null, cache.obtener("municipio:popayan|HISTORICO|NORMAL"))
+        assertEquals(
+            "Durante la Colonia fue la Plaza Mayor de la ciudad y escenario de mercados y cabildos.",
+            cache.obtener("wikipedia-es:9855193|HISTORICO|NORMAL"),
+        )
+        assertEquals(
+            listOf("San Juan de Pasto fue fundada en 1537 en el valle de Atriz."),
+            cache.obtenerVariantes("municipio:pasto|HISTORICO|NORMAL"),
+        )
+        assertFalse(archivo.readText().contains("El contexto no menciona"))
+    }
 }
