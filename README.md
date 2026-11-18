@@ -56,3 +56,19 @@ Funciona **en cualquier lugar del mundo**, no solo en Pasto, y permite elegir el
 
 ---
 
+## 2. Capturas
+
+Capturas tomadas en el emulador oficial de Wear OS (*Large Round*, API 37).
+
+| Inicio (explorando) | Dato real (París) | Acciones del dato | Historial |
+|---|---|---|---|
+| ![Inicio](auditorias/capturas/s2-grande-10b-inicio-bogota.png) | ![Dato París](auditorias/capturas/s2-grande-12-dato-paris.png) | ![Acciones](auditorias/capturas/s2-grande-04-dato-pasto-acciones.png) | ![Historial](auditorias/capturas/s2-grande-14c-historial-ciudades-lista.png) |
+
+| Intensidad | Modo demo | Sin internet (Pasto) | Pantalla pequeña (192 dp) |
+|---|---|---|---|
+| ![Intensidad](auditorias/capturas/s2-grande-08b-configuracion-intenso-activo.png) | ![Modo demo](auditorias/capturas/s2-grande-15-modo-demo-activo.png) | ![Sin internet](auditorias/capturas/s2-grande-16b-modo-demo-sin-internet-carnaval.png) | ![Small Round](auditorias/capturas/s2-pequena-02-dato.png) |
+
+Todas las capturas (permisos, estados de error, fuente grande `1.24x` y pantalla pequeña) están en [`auditorias/capturas/`](auditorias/capturas/).
+
+---
+
