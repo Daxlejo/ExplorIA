@@ -190,6 +190,37 @@
         </ol>
       </div>
     </section>
+
+    <section class="seccion" id="arquitectura" aria-labelledby="titulo-arquitectura">
+      <div class="contenedor">
+        <p class="seccion__eyebrow">Arquitectura</p>
+        <h2 id="titulo-arquitectura">Clean Architecture + MVVM, en cuatro capas</h2>
+        <p class="seccion__intro">Las dependencias apuntan siempre hacia <code>domain</code>, que es Kotlin puro y no importa nada de <code>android.*</code>. Cada pantalla expone un <code>StateFlow</code> inmutable y la inyección de dependencias es manual. Por eso, en la segunda fase, los datos simulados se reemplazaron por fuentes reales sin modificar el dominio.</p>
+        <div class="capas">
+          <article class="capa">
+            <h3><code>ui</code></h3>
+            <p>Muestra estado y envía eventos, sin lógica de negocio.</p>
+            <p class="capa__ejemplos">InicioPantalla · DatoViewModel · TarjetaDato</p>
+          </article>
+          <article class="capa">
+            <h3><code>data</code></h3>
+            <p>Habla con el mundo exterior y traduce al dominio.</p>
+            <p class="capa__ejemplos">ProveedorUbicacionFused · CadenaFuentesLugares · GeneradorDatosOpenAi</p>
+          </article>
+          <article class="capa capa--centro">
+            <h3><code>domain</code></h3>
+            <p>Reglas de negocio en Kotlin puro: modelos, errores, puertos y casos de uso.</p>
+            <p class="capa__ejemplos">PoliticaIntensidad · FiltroRelevancia · PromptBuilder · ObtenerDatoParaUbicacion</p>
+          </article>
+          <article class="capa">
+            <h3><code>di</code></h3>
+            <p>Conecta las implementaciones con los puertos del dominio.</p>
+            <p class="capa__ejemplos">AppContainer · FabricaViewModels</p>
+          </article>
+        </div>
+        <p class="nota">Los diagramas de clases, secuencia y estados están en <a href="https://github.com/Daxlejo/ExplorIA/blob/master/docs/arquitectura.md">docs/arquitectura.md</a>.</p>
+      </div>
+    </section>
   </main>
 
   <footer class="pie" id="creditos">

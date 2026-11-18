@@ -458,3 +458,53 @@ code {
   border-color: var(--ambar);
   color: var(--negro);
 }
+
+/* Arquitectura en capas */
+.capas {
+  display: grid;
+  gap: 16px;
+}
+
+.capa {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 22px;
+}
+
+.capa h3 code {
+  font-size: 1rem;
+  color: var(--teal-claro);
+  background: var(--teal-oscuro);
+  border-color: var(--teal);
+}
+
+.capa p {
+  margin: 0 0 8px;
+  color: var(--texto-suave);
+}
+
+.capa .capa__ejemplos {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  overflow-wrap: anywhere;
+}
+
+.capa--centro {
+  border: 2px solid var(--ambar);
+  background: linear-gradient(160deg, rgba(250, 199, 117, 0.08), var(--superficie) 60%);
+}
+
+.capa--centro h3 code {
+  color: var(--negro);
+  background: var(--ambar);
+  border-color: var(--ambar);
+}
+
+.nota {
+  margin-top: 24px;
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+}
