@@ -390,3 +390,71 @@ code {
   font-size: 0.95rem;
   color: var(--texto-suave);
 }
+
+/* Diagrama del flujo de 7 pasos */
+.flujo {
+  counter-reset: paso;
+  display: grid;
+  gap: 32px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.flujo__paso {
+  counter-increment: paso;
+  position: relative;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 56px 20px 20px;
+}
+
+.flujo__paso::before {
+  content: counter(paso);
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--teal-oscuro);
+  border: 1px solid var(--teal);
+  color: var(--teal-claro);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* Flecha hacia el siguiente paso (vertical en móvil) */
+.flujo__paso:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  width: 2px;
+  height: 20px;
+  background: var(--teal);
+  transform: translateX(-50%);
+}
+
+.flujo__paso h3 {
+  font-size: 1.1rem;
+}
+
+.flujo__paso p {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+}
+
+.flujo__paso--final {
+  border-color: var(--ambar);
+}
+
+.flujo__paso--final::before {
+  background: var(--ambar);
+  border-color: var(--ambar);
+  color: var(--negro);
+}

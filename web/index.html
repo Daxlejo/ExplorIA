@@ -152,6 +152,44 @@
         </ul>
       </div>
     </section>
+
+    <section class="seccion" id="como-funciona" aria-labelledby="titulo-como-funciona">
+      <div class="contenedor">
+        <p class="seccion__eyebrow">Cómo funciona</p>
+        <h2 id="titulo-como-funciona">De una coordenada a un dato en siete pasos</h2>
+        <p class="seccion__intro">Cada paso vive en una clase con una sola responsabilidad. Los errores (sin internet, tiempo agotado, fallo de la IA, sin lugares) se modelan con clases selladas y cada uno tiene su pantalla diseñada.</p>
+        <ol class="flujo">
+          <li class="flujo__paso">
+            <h3>Ubicación</h3>
+            <p><code>ProveedorUbicacionFused</code> emite la coordenada actual como <code>Flow</code>.</p>
+          </li>
+          <li class="flujo__paso">
+            <h3>Motor</h3>
+            <p><code>MotorAutomatico</code> respeta la pausa y la política de intensidad y pide lugares cercanos.</p>
+          </li>
+          <li class="flujo__paso">
+            <h3>Fuentes</h3>
+            <p><code>CadenaFuentesLugares</code> consulta Wikipedia, Nominatim y el municipio, en orden.</p>
+          </li>
+          <li class="flujo__paso">
+            <h3>Filtros</h3>
+            <p><code>FiltroRelevancia</code> descarta lo común o lejano; <code>FiltroRepeticion</code>, lo mostrado hace poco.</p>
+          </li>
+          <li class="flujo__paso">
+            <h3>Prompt</h3>
+            <p><code>SelectorTipoDato</code> elige el tipo y <code>PromptBuilder</code> arma la instrucción.</p>
+          </li>
+          <li class="flujo__paso">
+            <h3>Caché o IA</h3>
+            <p><code>GeneradorDatosConCache</code> busca en caché; solo si no existe llama a OpenAI.</p>
+          </li>
+          <li class="flujo__paso flujo__paso--final">
+            <h3>Dato</h3>
+            <p>Se guarda en el historial (Room), el reloj vibra y se abre la pantalla Dato.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
   </main>
 
   <footer class="pie" id="creditos">
